@@ -4,1081 +4,1277 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SalesIQ — AI Business Intelligence</title>
-  <meta name="description" content="SalesIQ: AI-powered sales analytics dashboard with a Groq-driven business intelligence assistant." />
+  <meta name="description" content="SalesIQ: AI-powered sales analytics — corporate premium dashboard with Groq AI assistant." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
-    /* =====================================================
-       TOKENS
-    ===================================================== */
+    /* ── TOKENS ─────────────────────────────────────────── */
     :root{
-      --bg:#07090f;
-      --panel:#0e1320;
-      --panel2:#141b2d;
-      --border:rgba(255,255,255,0.06);
-      --border2:rgba(255,255,255,0.12);
-      --p:#7c6fff;
-      --p2:#00cba9;
-      --warn:#ff6b6b;
-      --gold:#ffc048;
-      --txt:#dde2f0;
-      --muted:#6b7494;
-      --r:14px;
-      --rs:9px;
-      --sh:0 8px 40px rgba(0,0,0,0.6);
+      --bg:#0d0f14; --panel:#161a22; --panel2:#1c2230; --panel3:#22293e;
+      --border:rgba(255,255,255,.06); --border2:rgba(255,255,255,.12);
+      --em:#00c07a; --em2:#009960; --em-d:rgba(0,192,122,.12); --em-g:rgba(0,192,122,.28);
+      --gold:#f5a623; --gold-d:rgba(245,166,35,.12); --gold-g:rgba(245,166,35,.28);
+      --blue:#3b82f6; --blue-d:rgba(59,130,246,.12);
+      --red:#ef4444;  --red-d:rgba(239,68,68,.12);
+      --txt:#e2e8f0; --txt2:#94a3b8; --txt3:#64748b;
+      --r:12px; --rs:8px;
+      --sh:0 8px 40px rgba(0,0,0,.55);
     }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     html{scroll-behavior:smooth}
     body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;overflow-x:hidden}
 
-    /* ambient glows */
-    .glow-a{position:fixed;top:-300px;left:-200px;width:700px;height:700px;background:radial-gradient(circle,rgba(124,111,255,.12) 0%,transparent 65%);border-radius:50%;pointer-events:none;animation:ga 14s ease-in-out infinite alternate}
-    .glow-b{position:fixed;bottom:-250px;right:-150px;width:600px;height:600px;background:radial-gradient(circle,rgba(0,203,169,.09) 0%,transparent 65%);border-radius:50%;pointer-events:none;animation:gb 18s ease-in-out infinite alternate}
-    @keyframes ga{to{transform:translate(80px,60px)}}
-    @keyframes gb{to{transform:translate(-60px,-40px)}}
+    /* ── BACKGROUND ─────────────────────────────────────── */
+    .bg-grid{position:fixed;inset:0;pointer-events:none;z-index:0;
+      background-image:linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);
+      background-size:40px 40px}
+    .glow-a{position:fixed;top:-180px;right:-80px;width:560px;height:560px;
+      background:radial-gradient(circle,rgba(0,192,122,.08) 0%,transparent 65%);
+      border-radius:50%;pointer-events:none;animation:ga 16s ease-in-out infinite alternate}
+    .glow-b{position:fixed;bottom:-200px;left:-80px;width:640px;height:640px;
+      background:radial-gradient(circle,rgba(245,166,35,.055) 0%,transparent 65%);
+      border-radius:50%;pointer-events:none;animation:gb 20s ease-in-out infinite alternate}
+    @keyframes ga{to{transform:translate(-80px,60px)}}
+    @keyframes gb{to{transform:translate(60px,-40px)}}
 
-    /* =====================================================
-       SCROLLBAR
-    ===================================================== */
+    /* ── SCROLLBAR ──────────────────────────────────────── */
     ::-webkit-scrollbar{width:5px}
     ::-webkit-scrollbar-track{background:transparent}
     ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
 
-    /* =====================================================
-       NAVBAR
-    ===================================================== */
+    /* ── NAVBAR ─────────────────────────────────────────── */
     nav{
       position:sticky;top:0;z-index:300;
       display:flex;align-items:center;justify-content:space-between;
-      padding:0 40px;height:64px;
-      background:rgba(7,9,15,.85);
-      backdrop-filter:blur(20px);
-      border-bottom:1px solid var(--border);
+      padding:0 40px;height:66px;
+      background:linear-gradient(180deg,rgba(13,15,20,.98),rgba(13,15,20,.90));
+      backdrop-filter:blur(24px);
+      border-bottom:1px solid var(--border2);
+      box-shadow:0 4px 32px rgba(0,0,0,.45);
     }
-    .nav-logo{display:flex;align-items:center;gap:12px;text-decoration:none}
-    .nav-logo-icon{
-      width:36px;height:36px;border-radius:10px;
-      background:linear-gradient(135deg,var(--p),var(--p2));
-      display:flex;align-items:center;justify-content:center;font-size:17px
-    }
-    .nav-logo-text{font-size:18px;font-weight:800;color:var(--txt);letter-spacing:-.5px}
-    .nav-logo-text span{color:var(--p)}
-    .nav-links{display:flex;gap:6px}
+    .nav-logo{display:flex;align-items:center;gap:11px;text-decoration:none}
+    .nav-logo-icon{width:36px;height:36px;border-radius:9px;
+      background:linear-gradient(135deg,var(--em),var(--gold));
+      display:flex;align-items:center;justify-content:center;font-size:17px;
+      box-shadow:0 0 18px var(--em-g)}
+    .nav-logo-text{font-size:18px;font-weight:800;letter-spacing:-.5px}
+    .nav-logo-text span{background:linear-gradient(135deg,var(--em),var(--gold));
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .nav-div{width:1px;height:26px;background:var(--border2);margin:0 14px}
+    .nav-links{display:flex;gap:2px}
     .nav-link{
-      padding:7px 16px;border-radius:var(--rs);font-size:13.5px;font-weight:500;
-      color:var(--muted);cursor:pointer;transition:all .2s;border:none;background:none;
-      font-family:inherit
+      position:relative;padding:7px 16px;border-radius:var(--rs);
+      font-size:13.5px;font-weight:500;color:var(--txt2);
+      cursor:pointer;transition:all .2s;border:none;background:none;font-family:inherit
     }
-    .nav-link:hover{color:var(--txt);background:var(--panel2)}
-    .nav-link.active{color:var(--txt);background:var(--panel2);border:1px solid var(--border2)}
+    .nav-link::after{content:'';position:absolute;bottom:5px;left:50%;
+      transform:translateX(-50%);width:0;height:2px;background:var(--em);
+      border-radius:2px;transition:width .25s}
+    .nav-link:hover{color:var(--txt);background:rgba(255,255,255,.04)}
+    .nav-link.active{color:var(--txt);background:var(--em-d)}
+    .nav-link.active::after{width:22px}
     .nav-right{display:flex;align-items:center;gap:10px}
-    .status-pill{
-      display:flex;align-items:center;gap:7px;
-      padding:5px 12px;border-radius:20px;
-      background:rgba(0,203,169,.1);border:1px solid rgba(0,203,169,.25);
-      font-size:12px;font-weight:500;color:var(--p2)
-    }
-    .status-dot{width:7px;height:7px;border-radius:50%;background:var(--p2);animation:blink 2s ease-in-out infinite}
-    @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
-    .btn-ask{
-      display:flex;align-items:center;gap:8px;
-      padding:8px 18px;border-radius:var(--rs);
-      background:linear-gradient(135deg,var(--p),#a49aff);
-      color:#fff;font-size:13.5px;font-weight:600;border:none;cursor:pointer;
-      font-family:inherit;transition:transform .2s,box-shadow .2s
-    }
-    .btn-ask:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(124,111,255,.45)}
+    .status-pill{display:flex;align-items:center;gap:6px;padding:5px 12px;
+      border-radius:20px;background:var(--em-d);border:1px solid rgba(0,192,122,.2);
+      font-size:12px;font-weight:500;color:var(--em)}
+    .sdot{width:7px;height:7px;border-radius:50%;background:var(--em);animation:blink 2s infinite}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+    .btn-ask{display:flex;align-items:center;gap:7px;padding:8px 18px;border-radius:var(--rs);
+      background:linear-gradient(135deg,var(--em),var(--em2));color:#fff;
+      font-size:13px;font-weight:600;border:none;cursor:pointer;font-family:inherit;
+      transition:all .2s;box-shadow:0 2px 14px var(--em-g)}
+    .btn-ask:hover{transform:translateY(-1px);box-shadow:0 5px 22px var(--em-g)}
 
-    /* =====================================================
-       PAGE SECTIONS
-    ===================================================== */
-    .section{display:none;padding:36px 40px 60px;max-width:1600px;margin:0 auto}
+    /* ── SECTIONS ───────────────────────────────────────── */
+    .section{display:none;padding:30px 40px 80px;max-width:1720px;margin:0 auto;position:relative;z-index:1}
     .section.active{display:block}
 
-    /* =====================================================
-       HERO BANNER (dashboard top)
-    ===================================================== */
+    /* ── PAGE HEADER ────────────────────────────────────── */
+    .page-header{margin-bottom:26px}
+    .page-title{font-size:23px;font-weight:800;letter-spacing:-.6px;margin-bottom:3px}
+    .page-title .acc{background:linear-gradient(135deg,var(--em),var(--gold));
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .page-sub{font-size:13px;color:var(--txt3)}
+
+    /* ── HERO ───────────────────────────────────────────── */
     .hero{
-      background:linear-gradient(135deg,rgba(124,111,255,.12) 0%,rgba(0,203,169,.06) 100%);
-      border:1px solid var(--border2);border-radius:20px;
-      padding:36px 40px;margin-bottom:32px;
+      background:linear-gradient(135deg,rgba(0,192,122,.09),rgba(245,166,35,.06) 60%,rgba(59,130,246,.04));
+      border:1px solid rgba(0,192,122,.18);border-radius:16px;
+      padding:30px 36px;margin-bottom:22px;
       display:flex;justify-content:space-between;align-items:center;
       position:relative;overflow:hidden
     }
-    .hero::before{
-      content:'';position:absolute;right:-80px;top:-80px;
-      width:300px;height:300px;
-      background:radial-gradient(circle,rgba(124,111,255,.15) 0%,transparent 70%);
-      border-radius:50%
-    }
-    .hero-title{font-size:30px;font-weight:800;letter-spacing:-1px;margin-bottom:6px}
-    .hero-title span{
-      background:linear-gradient(135deg,var(--p),var(--p2));
-      -webkit-background-clip:text;-webkit-text-fill-color:transparent
-    }
-    .hero-sub{font-size:14px;color:var(--muted)}
+    .hero::before{content:'';position:absolute;right:-50px;top:-50px;width:260px;height:260px;
+      background:radial-gradient(circle,rgba(0,192,122,.1),transparent 70%);border-radius:50%}
+    .hero-eyebrow{font-size:10px;font-weight:700;color:var(--em);text-transform:uppercase;
+      letter-spacing:.8px;margin-bottom:7px;display:flex;align-items:center;gap:6px}
+    .hero-eyebrow::before{content:'';width:14px;height:2px;background:var(--em);border-radius:1px}
+    .hero-title{font-size:28px;font-weight:900;letter-spacing:-1.1px;margin-bottom:5px;line-height:1.1}
+    .hero-title .grad{background:linear-gradient(135deg,var(--em) 30%,var(--gold));
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .hero-sub{font-size:13px;color:var(--txt2)}
     .hero-stats{display:flex;gap:32px;z-index:1}
-    .hero-stat-val{font-size:22px;font-weight:700;letter-spacing:-.5px}
-    .hero-stat-lbl{font-size:11px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:.5px}
+    .hero-stat{text-align:center}
+    .hero-stat-val{font-size:22px;font-weight:800;letter-spacing:-.7px}
+    .hero-stat-lbl{font-size:10px;color:var(--txt3);margin-top:2px;text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+    .hero-sep{width:1px;height:44px;background:var(--border2)}
 
-    /* =====================================================
-       KPI CARDS
-    ===================================================== */
-    .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-bottom:28px}
-    .kpi{
-      background:var(--panel);border:1px solid var(--border);border-radius:var(--r);
-      padding:22px;position:relative;overflow:hidden;cursor:default;
-      transition:transform .2s,box-shadow .2s
-    }
-    .kpi:hover{transform:translateY(-3px);box-shadow:var(--sh)}
-    .kpi::after{
-      content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:var(--r) var(--r) 0 0
-    }
-    .kpi:nth-child(1)::after{background:linear-gradient(90deg,var(--p),#a49aff)}
-    .kpi:nth-child(2)::after{background:linear-gradient(90deg,var(--p2),#00b894)}
-    .kpi:nth-child(3)::after{background:linear-gradient(90deg,var(--gold),#ff9a00)}
-    .kpi:nth-child(4)::after{background:linear-gradient(90deg,var(--warn),#ff9f7f)}
-    .kpi-icon{
-      width:44px;height:44px;border-radius:var(--rs);
-      display:flex;align-items:center;justify-content:center;font-size:21px;margin-bottom:14px
-    }
-    .kpi:nth-child(1) .kpi-icon{background:rgba(124,111,255,.14)}
-    .kpi:nth-child(2) .kpi-icon{background:rgba(0,203,169,.14)}
-    .kpi:nth-child(3) .kpi-icon{background:rgba(255,192,72,.14)}
-    .kpi:nth-child(4) .kpi-icon{background:rgba(255,107,107,.14)}
-    .kpi-lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-weight:600}
-    .kpi-val{font-size:26px;font-weight:800;letter-spacing:-1px;margin:6px 0 4px}
-    .kpi-sub{font-size:12px;color:var(--muted)}
+    /* ── KPI CARDS ──────────────────────────────────────── */
+    .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:20px}
+    .kpi{background:var(--panel);border:1px solid var(--border);border-radius:var(--r);
+      padding:20px 20px 0;position:relative;overflow:hidden;cursor:default;
+      transition:transform .22s,box-shadow .22s,border-color .22s}
+    .kpi:hover{transform:translateY(-4px);box-shadow:var(--sh);border-color:var(--border2)}
+    .kpi-bar{position:absolute;top:0;left:0;right:0;height:3px}
+    .kpi:nth-child(1) .kpi-bar{background:linear-gradient(90deg,var(--em),#00e492)}
+    .kpi:nth-child(2) .kpi-bar{background:linear-gradient(90deg,var(--gold),#ffd070)}
+    .kpi:nth-child(3) .kpi-bar{background:linear-gradient(90deg,var(--blue),#60a5fa)}
+    .kpi:nth-child(4) .kpi-bar{background:linear-gradient(90deg,var(--red),#fb923c)}
+    .kpi-hd{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:11px}
+    .kpi-icon{width:40px;height:40px;border-radius:var(--rs);display:flex;align-items:center;justify-content:center;font-size:19px}
+    .kpi:nth-child(1) .kpi-icon{background:var(--em-d)}
+    .kpi:nth-child(2) .kpi-icon{background:var(--gold-d)}
+    .kpi:nth-child(3) .kpi-icon{background:var(--blue-d)}
+    .kpi:nth-child(4) .kpi-icon{background:var(--red-d)}
+    .kpi-pill{font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:20px}
+    .kpi-pill.up{background:var(--em-d);color:var(--em)}
+    .kpi-pill.dn{background:var(--red-d);color:var(--red)}
+    .kpi-pill.nu{background:var(--gold-d);color:var(--gold)}
+    .kpi-lbl{font-size:10.5px;color:var(--txt3);text-transform:uppercase;letter-spacing:.6px;font-weight:600;margin-bottom:5px}
+    .kpi-val{font-size:25px;font-weight:800;letter-spacing:-1px;margin-bottom:2px}
+    .kpi-sub{font-size:11.5px;color:var(--txt3);margin-bottom:10px}
+    /* sparkline wrapper — fixed height so Chart.js respects it */
+    .spark-wrap{height:44px;margin:0 -20px}
+    .spark-wrap canvas{display:block}
 
-    /* skeleton */
-    .ske{
-      background:linear-gradient(90deg,var(--panel2) 25%,rgba(255,255,255,.03) 50%,var(--panel2) 75%);
-      background-size:400% 100%;animation:ske 1.4s ease infinite;border-radius:6px
-    }
+    /* ── SKELETON ───────────────────────────────────────── */
+    .ske{background:linear-gradient(90deg,var(--panel2) 25%,rgba(255,255,255,.025) 50%,var(--panel2) 75%);
+      background-size:400% 100%;animation:ske 1.4s ease infinite;border-radius:6px;color:transparent!important}
     @keyframes ske{from{background-position:400% 0}to{background-position:-400% 0}}
-    .ske-h{height:26px;width:70%}
-    .ske-s{height:14px;width:55%;margin-top:4px}
 
-    /* =====================================================
-       CHART CARDS
-    ===================================================== */
-    .row2{display:grid;grid-template-columns:2fr 1fr;gap:18px;margin-bottom:18px}
-    .row3{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
-    .card{
-      background:var(--panel);border:1px solid var(--border);
-      border-radius:var(--r);padding:24px
-    }
-    .card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px}
-    .card-title{font-size:14.5px;font-weight:700}
-    .card-sub{font-size:11.5px;color:var(--muted);margin-top:3px}
-    .badge{
-      padding:3px 10px;border-radius:20px;font-size:10.5px;font-weight:700;
-      background:rgba(124,111,255,.14);color:var(--p);letter-spacing:.3px
-    }
-    .badge-green{background:rgba(0,203,169,.14);color:var(--p2)}
+    /* ── CARDS ──────────────────────────────────────────── */
+    .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--r);padding:22px;transition:border-color .2s}
+    .card:hover{border-color:var(--border2)}
+    .card-hd{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px}
+    .card-title{font-size:14px;font-weight:700;letter-spacing:-.2px}
+    .card-sub{font-size:11.5px;color:var(--txt3);margin-top:3px}
+    .badge{padding:3px 10px;border-radius:20px;font-size:10.5px;font-weight:700;letter-spacing:.3px}
+    .b-em{background:var(--em-d);color:var(--em);border:1px solid rgba(0,192,122,.22)}
+    .b-gold{background:var(--gold-d);color:var(--gold);border:1px solid rgba(245,166,35,.22)}
+    .b-blue{background:var(--blue-d);color:var(--blue);border:1px solid rgba(59,130,246,.22)}
 
-    /* products table */
+    /* ── DASHBOARD LAYOUT ───────────────────────────────── */
+    .row-2-1{display:grid;grid-template-columns:2.2fr 1fr;gap:15px;margin-bottom:15px}
+    .row-3{display:grid;grid-template-columns:1fr 1fr 1.1fr;gap:15px;margin-bottom:15px}
+
+    /* ── REGION RINGS ───────────────────────────────────── */
+    .rings-list{display:flex;flex-direction:column;gap:14px;padding-top:4px}
+    .ring-row{display:flex;align-items:center;gap:14px}
+    .ring-svg{flex-shrink:0}
+    .ring-info{flex:1;min-width:0}
+    .ring-name{font-size:13px;font-weight:600;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .ring-detail{font-size:11.5px;color:var(--txt3)}
+    .ring-pct{font-size:15px;font-weight:800;flex-shrink:0}
+
+    /* ── TREEMAP ────────────────────────────────────────── */
+    .treemap{display:flex;gap:5px;height:220px}
+    .tm-col{display:flex;flex-direction:column;gap:5px}
+    .tm-block{
+      border-radius:8px;flex:1;display:flex;flex-direction:column;
+      justify-content:flex-end;padding:10px 12px;cursor:default;
+      transition:filter .18s;overflow:hidden;min-height:0
+    }
+    .tm-block:hover{filter:brightness(1.18)}
+    .tm-lbl{font-size:11.5px;font-weight:700;color:rgba(255,255,255,.9);line-height:1.3}
+    .tm-val{font-size:11px;color:rgba(255,255,255,.6);margin-top:2px}
+
+    /* ── GAUGE CHARTS ───────────────────────────────────── */
+    .gauge-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .gauge-item{display:flex;flex-direction:column;align-items:center;padding:6px 0}
+    .gauge-canvas-wrap{position:relative;width:96px;height:54px;overflow:hidden}
+    .gauge-canvas-wrap canvas{position:absolute;top:0;left:0}
+    .gauge-center{
+      position:absolute;bottom:0;left:50%;transform:translateX(-50%);
+      font-size:14px;font-weight:800;line-height:1;text-align:center
+    }
+    .gauge-lbl{font-size:11px;color:var(--txt3);margin-top:6px;text-align:center;font-weight:500}
+
+    /* ── HEATMAP ────────────────────────────────────────── */
+    .heatmap-outer{overflow-x:auto;padding-bottom:4px}
+    .hm-header{display:flex;margin-bottom:6px}
+    .hm-wk-pad{width:28px;flex-shrink:0}
+    .hm-months{display:flex;flex:1;gap:0}
+    .hm-month-lbl{font-size:10px;color:var(--txt3);font-weight:600;text-transform:uppercase}
+    .hm-body{display:flex;gap:3px}
+    .hm-days{display:flex;flex-direction:column;gap:3px;width:28px;flex-shrink:0;padding-top:0}
+    .hm-day-lbl{font-size:9px;color:var(--txt3);font-weight:600;height:13px;line-height:13px;text-align:right;padding-right:5px}
+    .hm-weeks{display:flex;gap:3px}
+    .hm-week{display:flex;flex-direction:column;gap:3px}
+    .hm-cell{width:13px;height:13px;border-radius:3px;cursor:default;transition:transform .12s}
+    .hm-cell:hover{transform:scale(1.3);position:relative;z-index:5}
+    .hm-cell.l0{background:rgba(255,255,255,.05)}
+    .hm-cell.l1{background:rgba(0,192,122,.22)}
+    .hm-cell.l2{background:rgba(0,192,122,.44)}
+    .hm-cell.l3{background:rgba(0,192,122,.68)}
+    .hm-cell.l4{background:rgba(0,192,122,.92)}
+    .hm-cell.empty{background:transparent;pointer-events:none}
+    .hm-legend{display:flex;align-items:center;gap:5px;margin-top:8px;font-size:11px;color:var(--txt3)}
+    .hm-lc{width:12px;height:12px;border-radius:2px}
+    .hm-tooltip{position:fixed;background:var(--panel2);border:1px solid var(--border2);
+      border-radius:var(--rs);padding:7px 11px;font-size:12px;color:var(--txt);
+      pointer-events:none;z-index:999;display:none;white-space:nowrap;
+      box-shadow:0 4px 16px rgba(0,0,0,.5)}
+
+    /* ── PRODUCTS TABLE ─────────────────────────────────── */
     .pt{width:100%;border-collapse:collapse}
-    .pt th{text-align:left;font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;padding:0 0 12px}
-    .pt td{padding:11px 0;font-size:13px;border-bottom:1px solid var(--border);vertical-align:top}
+    .pt th{text-align:left;font-size:10.5px;font-weight:700;color:var(--txt3);
+      text-transform:uppercase;letter-spacing:.5px;padding:0 0 12px;
+      border-bottom:1px solid var(--border2)}
+    .pt td{padding:12px 0;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle}
     .pt tr:last-child td{border-bottom:none}
+    .pt tr:hover td{background:rgba(255,255,255,.014)}
     .p-name{font-weight:700;font-size:13px}
-    .p-cat{font-size:11px;color:var(--muted);margin-top:2px}
-    .bar-wrap{height:3px;background:var(--panel2);border-radius:4px;overflow:hidden;margin-top:7px;width:100px}
-    .bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--p),var(--p2))}
-    .rank{
-      width:22px;height:22px;border-radius:50%;background:var(--panel2);
-      display:flex;align-items:center;justify-content:center;
-      font-size:10px;font-weight:700;color:var(--muted);flex-shrink:0
-    }
+    .p-cat{font-size:11px;color:var(--txt3);margin-top:2px}
+    .bar-wrap{height:3px;background:var(--panel2);border-radius:4px;overflow:hidden;margin-top:7px;width:110px}
+    .bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--em),var(--gold))}
+    .rank{width:23px;height:23px;border-radius:50%;background:var(--panel2);
+      border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;
+      font-size:10px;font-weight:700;color:var(--txt2);flex-shrink:0}
+    .rank.top{background:var(--gold-d);border-color:var(--gold-g);color:var(--gold)}
 
-    /* =====================================================
-       AI ASSISTANT PAGE
-    ===================================================== */
-    .ai-layout{display:grid;grid-template-columns:1fr 440px;gap:24px;height:calc(100vh - 128px)}
-    .ai-info{display:flex;flex-direction:column;gap:18px;overflow-y:auto}
-    .ai-hero{
-      background:linear-gradient(135deg,rgba(124,111,255,.15),rgba(0,203,169,.06));
-      border:1px solid rgba(124,111,255,.2);border-radius:var(--r);padding:32px
-    }
-    .ai-hero-tag{
-      display:inline-flex;align-items:center;gap:6px;
-      padding:4px 12px;border-radius:20px;
-      background:rgba(124,111,255,.15);border:1px solid rgba(124,111,255,.3);
-      font-size:11px;font-weight:600;color:var(--p);margin-bottom:16px
-    }
-    .ai-hero-title{font-size:26px;font-weight:800;letter-spacing:-.8px;margin-bottom:8px}
-    .ai-hero-desc{font-size:14px;color:var(--muted);line-height:1.7}
-    .capability-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .cap{
-      background:var(--panel);border:1px solid var(--border);border-radius:var(--r);padding:16px;
-      transition:border-color .2s
-    }
-    .cap:hover{border-color:var(--border2)}
-    .cap-icon{font-size:22px;margin-bottom:10px}
-    .cap-title{font-size:13px;font-weight:600;margin-bottom:4px}
-    .cap-desc{font-size:12px;color:var(--muted);line-height:1.5}
+    /* ── AI SECTION ─────────────────────────────────────── */
+    .ai-layout{display:grid;grid-template-columns:1fr 455px;gap:22px;height:calc(100vh - 138px)}
+    .ai-info{display:flex;flex-direction:column;gap:16px;overflow-y:auto;padding-right:4px}
+    .ai-hero{background:linear-gradient(135deg,rgba(0,192,122,.1),rgba(245,166,35,.05));
+      border:1px solid rgba(0,192,122,.2);border-radius:var(--r);padding:30px;position:relative;overflow:hidden}
+    .ai-hero::before{content:'';position:absolute;right:-30px;top:-30px;width:180px;height:180px;
+      background:radial-gradient(circle,rgba(0,192,122,.12),transparent 70%);border-radius:50%}
+    .ai-tag{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;
+      background:var(--em-d);border:1px solid rgba(0,192,122,.25);
+      font-size:11px;font-weight:700;color:var(--em);margin-bottom:14px;letter-spacing:.3px}
+    .ai-title{font-size:24px;font-weight:900;letter-spacing:-.7px;margin-bottom:9px;line-height:1.2}
+    .ai-desc{font-size:14px;color:var(--txt2);line-height:1.75}
+    .cap-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+    .cap{background:var(--panel);border:1px solid var(--border);border-radius:var(--r);padding:15px;transition:all .2s}
+    .cap:hover{border-color:rgba(0,192,122,.3);background:rgba(0,192,122,.03)}
+    .cap-icon{font-size:21px;margin-bottom:9px}
+    .cap-title{font-size:13px;font-weight:700;margin-bottom:3px}
+    .cap-desc{font-size:12px;color:var(--txt3);line-height:1.55}
 
-    /* =====================================================
-       CHAT WIDGET
-    ===================================================== */
-    .chat-widget{
-      background:var(--panel);border:1px solid var(--border);border-radius:var(--r);
-      display:flex;flex-direction:column;height:100%;overflow:hidden
-    }
-    .chat-top{
-      padding:18px 20px;
-      background:linear-gradient(135deg,rgba(124,111,255,.12),rgba(0,203,169,.05));
-      border-bottom:1px solid var(--border);
-      display:flex;align-items:center;gap:12px
-    }
-    .chat-avatar{
-      width:40px;height:40px;border-radius:50%;
-      background:linear-gradient(135deg,var(--p),var(--p2));
-      display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0
-    }
-    .chat-name{font-weight:700;font-size:14.5px}
-    .chat-online{font-size:11px;color:var(--p2);display:flex;align-items:center;gap:5px}
-    .chat-msgs{
-      flex:1;overflow-y:auto;padding:20px;
-      display:flex;flex-direction:column;gap:14px
-    }
+    /* ── CHAT ───────────────────────────────────────────── */
+    .chat-widget{background:var(--panel);border:1px solid var(--border);border-radius:var(--r);
+      display:flex;flex-direction:column;height:100%;overflow:hidden;box-shadow:var(--sh)}
+    .chat-top{padding:16px 20px;background:linear-gradient(135deg,rgba(0,192,122,.1),rgba(245,166,35,.04));
+      border-bottom:1px solid var(--border);display:flex;align-items:center;gap:13px}
+    .chat-av{width:40px;height:40px;border-radius:50%;
+      background:linear-gradient(135deg,var(--em),var(--gold));
+      display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;
+      box-shadow:0 0 16px var(--em-g)}
+    .chat-name{font-weight:700;font-size:14px}
+    .chat-online{font-size:11px;color:var(--em);display:flex;align-items:center;gap:5px;margin-top:2px}
+    .chat-msgs{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:12px}
     .chat-msgs::-webkit-scrollbar{width:3px}
-
-    .msg{max-width:88%;padding:12px 15px;border-radius:14px;font-size:13.5px;line-height:1.6;animation:msgIn .3s ease}
+    .msg{max-width:88%;padding:12px 15px;border-radius:13px;font-size:13.5px;line-height:1.65;animation:msgIn .3s ease}
     @keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
     .msg-bot{background:var(--panel2);border:1px solid var(--border);align-self:flex-start;border-bottom-left-radius:4px}
-    .msg-user{
-      background:linear-gradient(135deg,var(--p),#a49aff);
-      color:#fff;align-self:flex-end;border-bottom-right-radius:4px
-    }
-    .msg-err{background:rgba(255,107,107,.1);border:1px solid rgba(255,107,107,.25);color:var(--warn);align-self:flex-start}
-
+    .msg-user{background:linear-gradient(135deg,var(--em),var(--em2));color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+    .msg-err{background:var(--red-d);border:1px solid rgba(239,68,68,.2);color:var(--red);align-self:flex-start}
     .typing{display:flex;gap:5px;align-items:center;padding:14px 18px}
-    .tdot{width:7px;height:7px;border-radius:50%;background:var(--muted);animation:tb 1.2s ease-in-out infinite}
-    .tdot:nth-child(2){animation-delay:.2s}
-    .tdot:nth-child(3){animation-delay:.4s}
+    .tdot{width:7px;height:7px;border-radius:50%;background:var(--txt3);animation:tb 1.2s ease-in-out infinite}
+    .tdot:nth-child(2){animation-delay:.2s}.tdot:nth-child(3){animation-delay:.4s}
     @keyframes tb{0%,100%{transform:translateY(0)}40%{transform:translateY(-6px)}}
-
-    .chips{padding:0 16px 12px;display:flex;flex-wrap:wrap;gap:6px}
-    .chip{
-      padding:5px 11px;border-radius:20px;font-size:11.5px;font-weight:500;
+    .chips{padding:0 16px 11px;display:flex;flex-wrap:wrap;gap:5px}
+    .chip{padding:5px 11px;border-radius:20px;font-size:11.5px;font-weight:500;
       background:var(--panel2);border:1px solid var(--border);
-      color:var(--muted);cursor:pointer;font-family:inherit;transition:all .2s
-    }
-    .chip:hover{border-color:var(--p);color:var(--p)}
-
-    .chat-foot{
-      padding:14px 16px;border-top:1px solid var(--border);
-      display:flex;gap:8px
-    }
-    #inp{
-      flex:1;background:var(--panel2);border:1px solid var(--border);
-      border-radius:var(--rs);color:var(--txt);font-family:inherit;
-      font-size:13.5px;padding:11px 14px;outline:none;transition:border-color .2s
-    }
-    #inp:focus{border-color:var(--p)}
-    #inp::placeholder{color:var(--muted)}
-    #send{
-      width:42px;height:42px;border-radius:var(--rs);
-      background:linear-gradient(135deg,var(--p),#a49aff);
+      color:var(--txt2);cursor:pointer;font-family:inherit;transition:all .2s}
+    .chip:hover{border-color:var(--em);color:var(--em);background:var(--em-d)}
+    .chat-foot{padding:12px 14px;border-top:1px solid var(--border);display:flex;gap:8px;background:var(--panel)}
+    #inp{flex:1;background:var(--panel2);border:1px solid var(--border);border-radius:var(--rs);
+      color:var(--txt);font-family:inherit;font-size:13.5px;padding:11px 14px;outline:none;transition:all .2s}
+    #inp:focus{border-color:var(--em);box-shadow:0 0 0 3px var(--em-d)}
+    #inp::placeholder{color:var(--txt3)}
+    #send{width:42px;height:42px;border-radius:var(--rs);
+      background:linear-gradient(135deg,var(--em),var(--em2));
       border:none;color:#fff;font-size:17px;cursor:pointer;
       display:flex;align-items:center;justify-content:center;
-      transition:transform .15s;flex-shrink:0
-    }
-    #send:hover{transform:scale(1.07)}
+      transition:all .15s;flex-shrink:0;box-shadow:0 2px 12px var(--em-g)}
+    #send:hover{transform:scale(1.08);box-shadow:0 4px 18px var(--em-g)}
     #send:disabled{opacity:.5;cursor:not-allowed}
-
-    /* API key banner */
-    .api-warn{
-      background:rgba(255,192,72,.08);border:1px solid rgba(255,192,72,.3);
-      border-radius:var(--rs);padding:12px 16px;font-size:12.5px;color:var(--gold);
-      margin:12px 16px 0;display:none
-    }
+    .api-warn{background:rgba(245,166,35,.07);border:1px solid rgba(245,166,35,.25);
+      border-radius:var(--rs);padding:10px 14px;font-size:12px;color:var(--gold);
+      margin:10px 14px 0;display:none}
     .api-warn.show{display:block}
-    .api-warn a{color:var(--gold);opacity:.8}
 
-    /* =====================================================
-       RESPONSIVE
-    ===================================================== */
-    @media(max-width:1100px){
+    /* ── REGIONS / PRODUCTS ─────────────────────────────── */
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:15px}
+    .row2-wide{display:grid;grid-template-columns:2fr 1fr;gap:15px;margin-bottom:15px}
+
+    /* ── RESPONSIVE ─────────────────────────────────────── */
+    @media(max-width:1200px){
+      .row-2-1{grid-template-columns:1fr}
+      .row-3{grid-template-columns:1fr 1fr}
+      .kpi-grid{grid-template-columns:1fr 1fr}
       .ai-layout{grid-template-columns:1fr}
       .ai-layout .chat-widget{height:520px}
-      .row2{grid-template-columns:1fr}
-      .kpi-grid{grid-template-columns:1fr 1fr}
+    }
+    @media(max-width:900px){
+      .row-3{grid-template-columns:1fr}.row2{grid-template-columns:1fr}
     }
     @media(max-width:768px){
-      nav{padding:0 20px}
-      .section{padding:24px 20px 50px}
+      nav{padding:0 20px}.section{padding:20px 18px 60px}
       .kpi-grid{grid-template-columns:1fr 1fr}
-      .row3{grid-template-columns:1fr}
       .hero{flex-direction:column;gap:20px}
-      .hero-stats{flex-wrap:wrap;gap:20px}
-      .capability-grid{grid-template-columns:1fr}
-      .nav-links{display:none}
+      .hero-stats{flex-wrap:wrap;gap:18px}
+      .cap-grid{grid-template-columns:1fr}
+      .nav-links,.nav-div{display:none}
     }
   </style>
 </head>
 <body>
 
+<div class="bg-grid"></div>
 <div class="glow-a"></div>
 <div class="glow-b"></div>
+<div class="hm-tooltip" id="hm-tip"></div>
 
-<!-- ========================================================
-     NAVBAR
-======================================================== -->
+<!-- NAVBAR -->
 <nav>
   <a class="nav-logo" href="#">
     <div class="nav-logo-icon">📊</div>
     <div class="nav-logo-text">Sales<span>IQ</span></div>
   </a>
-
+  <div class="nav-div"></div>
   <div class="nav-links">
     <button class="nav-link active" id="tab-dashboard" onclick="showSection('dashboard')">Dashboard</button>
     <button class="nav-link" id="tab-products"  onclick="showSection('products')">Products</button>
     <button class="nav-link" id="tab-regions"   onclick="showSection('regions')">Regions</button>
     <button class="nav-link" id="tab-assistant" onclick="showSection('assistant')">AI Assistant</button>
   </div>
-
   <div class="nav-right">
-    <div class="status-pill" id="status-pill">
-      <span class="status-dot"></span>
-      <span id="status-txt">Connecting…</span>
-    </div>
+    <div class="status-pill" id="status-pill"><span class="sdot"></span><span id="status-txt">Connecting…</span></div>
     <button class="btn-ask" onclick="showSection('assistant')">🤖 Ask AI</button>
   </div>
 </nav>
 
-<!-- ========================================================
-     DASHBOARD SECTION
-======================================================== -->
+<!-- ── DASHBOARD ─────────────────────────────────────────── -->
 <div class="section active" id="sec-dashboard">
 
   <!-- Hero -->
   <div class="hero">
     <div>
-      <div class="hero-title">Business <span>Analytics</span> Overview</div>
-      <div class="hero-sub">All figures are from completed transactions · Updated live from the database</div>
+      <div class="hero-eyebrow">Live Analytics</div>
+      <div class="hero-title">Business <span class="grad">Intelligence</span> Overview</div>
+      <div class="hero-sub">Completed transactions · Updated live from the database</div>
     </div>
     <div class="hero-stats">
-      <div>
-        <div class="hero-stat-val" id="h-rev">—</div>
-        <div class="hero-stat-lbl">Net Revenue</div>
-      </div>
-      <div>
-        <div class="hero-stat-val" id="h-txn">—</div>
-        <div class="hero-stat-lbl">Transactions</div>
-      </div>
-      <div>
-        <div class="hero-stat-val" id="h-prod">—</div>
-        <div class="hero-stat-lbl">Products</div>
-      </div>
+      <div class="hero-stat"><div class="hero-stat-val" id="h-rev">—</div><div class="hero-stat-lbl">Net Revenue</div></div>
+      <div class="hero-sep"></div>
+      <div class="hero-stat"><div class="hero-stat-val" id="h-txn">—</div><div class="hero-stat-lbl">Transactions</div></div>
+      <div class="hero-sep"></div>
+      <div class="hero-stat"><div class="hero-stat-val" id="h-prod">—</div><div class="hero-stat-lbl">Products</div></div>
     </div>
   </div>
 
-  <!-- KPI row -->
+  <!-- KPI Cards with Sparklines -->
   <div class="kpi-grid">
     <div class="kpi">
-      <div class="kpi-icon">💰</div>
+      <div class="kpi-bar"></div>
+      <div class="kpi-hd"><div class="kpi-icon">💰</div><span class="kpi-pill up">▲ Revenue</span></div>
       <div class="kpi-lbl">Total Revenue</div>
-      <div class="kpi-val ske ske-h" id="kv-rev">&nbsp;</div>
-      <div class="kpi-sub ske ske-s" id="ks-rev">&nbsp;</div>
+      <div class="kpi-val ske" id="kv-rev" style="min-height:30px">&nbsp;</div>
+      <div class="kpi-sub ske" id="ks-rev" style="min-height:15px;width:55%">&nbsp;</div>
+      <div class="spark-wrap"><canvas id="spark-rev" height="44"></canvas></div>
     </div>
     <div class="kpi">
-      <div class="kpi-icon">🧾</div>
+      <div class="kpi-bar"></div>
+      <div class="kpi-hd"><div class="kpi-icon">🧾</div><span class="kpi-pill nu">All Time</span></div>
       <div class="kpi-lbl">Transactions</div>
-      <div class="kpi-val ske ske-h" id="kv-txn">&nbsp;</div>
-      <div class="kpi-sub ske ske-s" id="ks-txn">&nbsp;</div>
+      <div class="kpi-val ske" id="kv-txn" style="min-height:30px">&nbsp;</div>
+      <div class="kpi-sub ske" id="ks-txn" style="min-height:15px;width:55%">&nbsp;</div>
+      <div class="spark-wrap"><canvas id="spark-txn" height="44"></canvas></div>
     </div>
     <div class="kpi">
-      <div class="kpi-icon">📦</div>
+      <div class="kpi-bar"></div>
+      <div class="kpi-hd"><div class="kpi-icon">📦</div><span class="kpi-pill up">Active</span></div>
       <div class="kpi-lbl">Products Tracked</div>
-      <div class="kpi-val ske ske-h" id="kv-prd">&nbsp;</div>
-      <div class="kpi-sub ske ske-s" id="ks-prd">&nbsp;</div>
+      <div class="kpi-val ske" id="kv-prd" style="min-height:30px">&nbsp;</div>
+      <div class="kpi-sub ske" id="ks-prd" style="min-height:15px;width:55%">&nbsp;</div>
+      <div class="spark-wrap"><canvas id="spark-prd" height="44"></canvas></div>
     </div>
     <div class="kpi">
-      <div class="kpi-icon">↩️</div>
+      <div class="kpi-bar"></div>
+      <div class="kpi-hd"><div class="kpi-icon">↩️</div><span class="kpi-pill dn">Returned</span></div>
       <div class="kpi-lbl">Returns Value</div>
-      <div class="kpi-val ske ske-h" id="kv-ret">&nbsp;</div>
-      <div class="kpi-sub ske ske-s" id="ks-ret">&nbsp;</div>
+      <div class="kpi-val ske" id="kv-ret" style="min-height:30px">&nbsp;</div>
+      <div class="kpi-sub ske" id="ks-ret" style="min-height:15px;width:55%">&nbsp;</div>
+      <div class="spark-wrap"><canvas id="spark-ret" height="44"></canvas></div>
     </div>
   </div>
 
-  <!-- Row 1: line + donut -->
-  <div class="row2">
+  <!-- Row 1: Area Chart + Region Rings -->
+  <div class="row-2-1">
     <div class="card">
-      <div class="card-head">
-        <div>
-          <div class="card-title">Monthly Revenue Trend</div>
-          <div class="card-sub">Completed transactions · INR (₹)</div>
-        </div>
-        <span class="badge">Jan – Jun 2026</span>
+      <div class="card-hd">
+        <div><div class="card-title">Monthly Revenue Trend</div><div class="card-sub">Completed sales · INR (₹)</div></div>
+        <span class="badge b-em">Jan – Jun 2026</span>
       </div>
-      <canvas id="Monthly" height="220"></canvas>
+      <canvas id="Monthly" height="195"></canvas>
     </div>
     <div class="card">
-      <div class="card-head">
-        <div>
-          <div class="card-title">Revenue by Region</div>
-          <div class="card-sub">Completed sales share</div>
-        </div>
+      <div class="card-hd">
+        <div><div class="card-title">Revenue by Region</div><div class="card-sub">Share of total completed sales</div></div>
+        <span class="badge b-gold">Rings</span>
       </div>
-      <canvas id="Region" height="220"></canvas>
+      <div class="rings-list" id="region-rings"></div>
     </div>
   </div>
 
-  <!-- Row 2: products mini + category bar -->
-  <div class="row3">
+  <!-- Row 2: Treemap + Gauges + Top Products -->
+  <div class="row-3">
     <div class="card">
-      <div class="card-head">
-        <div>
-          <div class="card-title">Top Products</div>
-          <div class="card-sub">By net revenue</div>
-        </div>
-        <span class="badge badge-green">Top 5</span>
+      <div class="card-hd">
+        <div><div class="card-title">Category Breakdown</div><div class="card-sub">Revenue share by category</div></div>
+        <span class="badge b-blue">Treemap</span>
       </div>
-      <div style="overflow:auto;max-height:270px">
+      <div class="treemap" id="treemap"></div>
+    </div>
+    <div class="card">
+      <div class="card-hd">
+        <div><div class="card-title">Performance Gauges</div><div class="card-sub">vs estimated targets</div></div>
+      </div>
+      <div class="gauge-grid" id="gauge-grid"></div>
+    </div>
+    <div class="card">
+      <div class="card-hd">
+        <div><div class="card-title">Top Products</div><div class="card-sub">By net revenue</div></div>
+        <span class="badge b-em">Top 5</span>
+      </div>
+      <div style="overflow:auto;max-height:265px">
         <table class="pt">
           <thead><tr><th>#</th><th>Product</th><th style="text-align:right">Revenue</th></tr></thead>
           <tbody id="pt-body"></tbody>
         </table>
       </div>
     </div>
-    <div class="card">
-      <div class="card-head">
-        <div>
-          <div class="card-title">Category Breakdown</div>
-          <div class="card-sub">Revenue by product category</div>
-        </div>
+  </div>
+
+  <!-- Heatmap -->
+  <div class="card">
+    <div class="card-hd">
+      <div><div class="card-title">Transaction Activity Heatmap</div><div class="card-sub">Daily volume across the year</div></div>
+      <span class="badge b-gold">2026</span>
+    </div>
+    <div class="heatmap-outer">
+      <div class="hm-header">
+        <div class="hm-wk-pad"></div>
+        <div class="hm-months" id="hm-months"></div>
       </div>
-      <canvas id="Category" height="270"></canvas>
+      <div class="hm-body">
+        <div class="hm-days">
+          <div class="hm-day-lbl">Mon</div><div class="hm-day-lbl"></div>
+          <div class="hm-day-lbl">Wed</div><div class="hm-day-lbl"></div>
+          <div class="hm-day-lbl">Fri</div><div class="hm-day-lbl"></div>
+          <div class="hm-day-lbl">Sun</div>
+        </div>
+        <div class="hm-weeks" id="hm-weeks"></div>
+      </div>
+      <div class="hm-legend">
+        <span>Less</span>
+        <div class="hm-lc" style="background:rgba(255,255,255,.05)"></div>
+        <div class="hm-lc" style="background:rgba(0,192,122,.22)"></div>
+        <div class="hm-lc" style="background:rgba(0,192,122,.44)"></div>
+        <div class="hm-lc" style="background:rgba(0,192,122,.68)"></div>
+        <div class="hm-lc" style="background:rgba(0,192,122,.92)"></div>
+        <span>More</span>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- ========================================================
-     PRODUCTS SECTION
-======================================================== -->
+<!-- ── PRODUCTS ───────────────────────────────────────────── -->
 <div class="section" id="sec-products">
-  <div style="margin-bottom:24px">
-    <div style="font-size:22px;font-weight:800;letter-spacing:-.5px;margin-bottom:4px">Product Performance</div>
-    <div style="font-size:13px;color:var(--muted)">Revenue, quantity and pricing for all products</div>
+  <div class="page-header">
+    <div class="page-title">Product <span class="acc">Performance</span></div>
+    <div class="page-sub">Revenue, quantity and pricing for all products · Completed transactions only</div>
   </div>
-  <div class="card">
-    <div class="card-head">
-      <div>
-        <div class="card-title">All Products — Ranked by Revenue</div>
-        <div class="card-sub">Completed transactions only</div>
-      </div>
-      <span class="badge">Live</span>
+  <div class="card" style="margin-bottom:15px">
+    <div class="card-hd">
+      <div><div class="card-title">All Products — Ranked by Revenue</div></div>
+      <span class="badge b-em">Live</span>
     </div>
     <table class="pt" style="width:100%">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Product</th>
-          <th>Category</th>
-          <th style="text-align:right">Avg Price</th>
-          <th style="text-align:right">Qty Sold</th>
-          <th style="text-align:right">Revenue</th>
-          <th style="text-align:right">Share</th>
-        </tr>
-      </thead>
+      <thead><tr>
+        <th>#</th><th>Product</th><th>Category</th>
+        <th style="text-align:right">Avg Price</th>
+        <th style="text-align:right">Qty Sold</th>
+        <th style="text-align:right">Revenue</th>
+        <th style="text-align:right">Share</th>
+      </tr></thead>
       <tbody id="full-pt"></tbody>
     </table>
   </div>
-  <div style="margin-top:18px">
+  <div class="row2-wide">
     <div class="card">
-      <div class="card-head"><div class="card-title">Revenue per Product (Bar)</div></div>
-      <canvas id="ProdBar" height="220"></canvas>
+      <div class="card-hd"><div class="card-title">Revenue per Product</div><span class="badge b-blue">Bar</span></div>
+      <canvas id="ProdBar" height="240"></canvas>
+    </div>
+    <div class="card">
+      <div class="card-hd"><div class="card-title">Category Share</div><span class="badge b-gold">Donut</span></div>
+      <canvas id="ProdDonut" height="240"></canvas>
     </div>
   </div>
 </div>
 
-<!-- ========================================================
-     REGIONS SECTION
-======================================================== -->
+<!-- ── REGIONS ────────────────────────────────────────────── -->
 <div class="section" id="sec-regions">
-  <div style="margin-bottom:24px">
-    <div style="font-size:22px;font-weight:800;letter-spacing:-.5px;margin-bottom:4px">Regional Analysis</div>
-    <div style="font-size:13px;color:var(--muted)">Sales performance across North, South, East and West</div>
+  <div class="page-header">
+    <div class="page-title">Regional <span class="acc">Analysis</span></div>
+    <div class="page-sub">Sales performance across North, South, East and West</div>
   </div>
-  <div class="row3">
+  <div class="row2" style="margin-bottom:15px">
     <div class="card">
-      <div class="card-head"><div class="card-title">Revenue Share by Region</div></div>
-      <canvas id="RegionPie" height="300"></canvas>
+      <div class="card-hd"><div class="card-title">Revenue Share by Region</div><span class="badge b-em">Doughnut</span></div>
+      <canvas id="RegionPie" height="290"></canvas>
     </div>
     <div class="card">
-      <div class="card-head"><div class="card-title">Region Comparison</div><div class="card-sub">Transactions vs Revenue</div></div>
-      <canvas id="RegionBar" height="300"></canvas>
+      <div class="card-hd"><div class="card-title">Revenue vs Transactions</div></div>
+      <canvas id="RegionBar" height="290"></canvas>
     </div>
   </div>
-  <div class="card" style="margin-top:18px">
-    <div class="card-head"><div class="card-title">Region Details</div></div>
+  <div class="card">
+    <div class="card-hd"><div class="card-title">Region Details</div><span class="badge b-gold">Summary</span></div>
     <table class="pt" style="width:100%">
-      <thead>
-        <tr>
-          <th>Region</th>
-          <th style="text-align:right">Revenue</th>
-          <th style="text-align:right">Transactions</th>
-          <th style="text-align:right">Share</th>
-        </tr>
-      </thead>
+      <thead><tr>
+        <th>Region</th>
+        <th style="text-align:right">Revenue</th>
+        <th style="text-align:right">Transactions</th>
+        <th style="text-align:right">Share</th>
+        <th>Progress</th>
+      </tr></thead>
       <tbody id="region-tbody"></tbody>
     </table>
   </div>
 </div>
 
-<!-- ========================================================
-     AI ASSISTANT SECTION
-======================================================== -->
+<!-- ── AI ASSISTANT ───────────────────────────────────────── -->
 <div class="section" id="sec-assistant">
   <div class="ai-layout">
-
-    <!-- Left: info -->
     <div class="ai-info">
       <div class="ai-hero">
-        <div class="ai-hero-tag">🤖 Powered by Groq · Llama 3.1</div>
-        <div class="ai-hero-title">Your AI Business<br/>Intelligence Assistant</div>
-        <div class="ai-hero-desc">
-          Ask questions in plain English and get instant, data-backed answers pulled directly from your sales database.
-          The AI never guesses — every number comes from real data.
-        </div>
+        <div class="ai-tag">🤖 Powered by Groq · Llama 3.1</div>
+        <div class="ai-title">Your AI Business<br/>Intelligence Assistant</div>
+        <div class="ai-desc">Ask questions in plain English — every answer is backed by real data pulled directly from the sales database. No guesswork, no hallucinations.</div>
       </div>
-
       <div>
-        <div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">What I Can Help With</div>
-        <div class="capability-grid">
-          <div class="cap">
-            <div class="cap-icon">💰</div>
-            <div class="cap-title">Revenue Analysis</div>
-            <div class="cap-desc">Total revenue, net sales, and financial summaries from your data.</div>
-          </div>
-          <div class="cap">
-            <div class="cap-icon">📦</div>
-            <div class="cap-title">Product Insights</div>
-            <div class="cap-desc">Best-selling products, revenue rankings, and performance comparisons.</div>
-          </div>
-          <div class="cap">
-            <div class="cap-icon">📈</div>
-            <div class="cap-title">Monthly Trends</div>
-            <div class="cap-desc">Month-over-month revenue trends and growth patterns.</div>
-          </div>
-          <div class="cap">
-            <div class="cap-icon">🌍</div>
-            <div class="cap-title">Regional Performance</div>
-            <div class="cap-desc">Which region drives the most revenue and transaction volume.</div>
-          </div>
-          <div class="cap">
-            <div class="cap-icon">📅</div>
-            <div class="cap-title">Period Comparison</div>
-            <div class="cap-desc">Compare revenue between any two months side by side.</div>
-          </div>
-          <div class="cap">
-            <div class="cap-icon">🔄</div>
-            <div class="cap-title">Returns Tracking</div>
-            <div class="cap-desc">Overview of returned orders and their impact on revenue.</div>
-          </div>
+        <div style="font-size:10.5px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:11px">Capabilities</div>
+        <div class="cap-grid">
+          <div class="cap"><div class="cap-icon">💰</div><div class="cap-title">Revenue Analysis</div><div class="cap-desc">Total revenue, net sales, and financial summaries.</div></div>
+          <div class="cap"><div class="cap-icon">📦</div><div class="cap-title">Product Insights</div><div class="cap-desc">Best-sellers, rankings, and performance comparisons.</div></div>
+          <div class="cap"><div class="cap-icon">📈</div><div class="cap-title">Monthly Trends</div><div class="cap-desc">Month-over-month revenue trends and growth patterns.</div></div>
+          <div class="cap"><div class="cap-icon">🌍</div><div class="cap-title">Regional Performance</div><div class="cap-desc">Which region drives the most revenue and transactions.</div></div>
+          <div class="cap"><div class="cap-icon">📅</div><div class="cap-title">Period Comparison</div><div class="cap-desc">Compare revenue between any two months.</div></div>
+          <div class="cap"><div class="cap-icon">🔄</div><div class="cap-title">Returns Tracking</div><div class="cap-desc">Returned orders and their impact on revenue.</div></div>
         </div>
       </div>
-
-      <div class="card" style="background:rgba(124,111,255,.06);border-color:rgba(124,111,255,.2)">
-        <div style="font-size:12px;color:var(--muted);line-height:1.7">
-          <strong style="color:var(--txt)">🔒 Security Note:</strong>
-          The AI classifies your question, fetches real data from the SQLite database using pre-defined safe queries, then uses Groq's Llama 3.1 to write a grounded answer.
-          The model <em>never</em> executes arbitrary SQL or invents figures.
+      <div class="card" style="background:rgba(0,192,122,.04);border-color:rgba(0,192,122,.18)">
+        <div style="font-size:12px;color:var(--txt2);line-height:1.75">
+          <strong style="color:var(--txt)">🔒 Security:</strong>
+          The AI fetches data using pre-defined safe queries — it <em>never</em> executes arbitrary SQL or invents figures.
         </div>
       </div>
     </div>
-
-    <!-- Right: chat widget -->
     <div class="chat-widget">
       <div class="chat-top">
-        <div class="chat-avatar">🤖</div>
+        <div class="chat-av">🤖</div>
         <div>
           <div class="chat-name">SalesIQ Assistant</div>
-          <div class="chat-online"><span class="status-dot"></span> Groq · Llama 3.1-8b-instant</div>
+          <div class="chat-online"><span class="sdot"></span> Groq · Llama 3.1-8b-instant</div>
         </div>
       </div>
-
       <div id="api-warn" class="api-warn">
-        ⚠ <strong>Groq API key not set.</strong> Open <code>salesiq/backend/.env</code> and replace <code>your_groq_api_key_here</code> with your real key from
-        <a href="https://console.groq.com/keys" target="_blank">console.groq.com</a>, then restart the server.
+        ⚠ <strong>Groq API key not set.</strong> Open <code>backend/.env</code> and set your key from
+        <a href="https://console.groq.com/keys" target="_blank" style="color:var(--gold)">console.groq.com</a>.
       </div>
-
       <div class="chat-msgs" id="chat-msgs">
         <div class="msg msg-bot">
           👋 Hello! I'm your AI business analyst powered by Groq.<br/><br/>
-          Ask me about revenue, top products, monthly trends, regional performance, or compare any two months. Try one of the suggestions below!
+          Ask me about revenue, top products, monthly trends or regional performance. Try a suggestion below!
         </div>
       </div>
-
       <div class="chips" id="chips"></div>
-
       <div class="chat-foot">
         <input id="inp" type="text" placeholder="Ask about your sales data…" autocomplete="off"
           onkeydown="if(event.key==='Enter')send()" />
         <button id="send" onclick="send()">➤</button>
       </div>
     </div>
-
   </div>
 </div>
 
-<!-- ========================================================
-     JAVASCRIPT
-======================================================== -->
 <script>
-/* -------------------------------------------------------
-   CONFIG
-------------------------------------------------------- */
-const API = 'http://localhost:8000/api';
+/* ─── CONFIG ──────────────────────────────────────────────── */
+const API = '/api';
 let charts = {};
+let prodData = null;
+let regionData = null;
+let monthlyData = null;
 
-/* -------------------------------------------------------
-   NAVIGATION
-------------------------------------------------------- */
+/* ─── NAV ─────────────────────────────────────────────────── */
 function showSection(name) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'));
   document.getElementById('sec-' + name).classList.add('active');
-  const tab = document.getElementById('tab-' + name);
-  if (tab) tab.classList.add('active');
+  const t = document.getElementById('tab-' + name);
+  if (t) t.classList.add('active');
   if (name === 'products') loadProductsPage();
   if (name === 'regions')  loadRegionsPage();
 }
 
-/* -------------------------------------------------------
-   FORMAT
-------------------------------------------------------- */
+/* ─── FORMAT ──────────────────────────────────────────────── */
 function fmt(n) {
   if (n >= 1e7) return '₹' + (n / 1e7).toFixed(2) + ' Cr';
   if (n >= 1e5) return '₹' + (n / 1e5).toFixed(2) + ' L';
   return '₹' + n.toLocaleString('en-IN', { maximumFractionDigits: 0 });
 }
-function fmtFull(n) {
-  return '₹' + n.toLocaleString('en-IN', { maximumFractionDigits: 0 });
-}
-function clr(i) {
-  return ['#7c6fff','#00cba9','#ffc048','#ff6b6b','#a78bfa','#06d6a0','#f9c74f'][i % 7];
+function fmtFull(n) { return '₹' + n.toLocaleString('en-IN', { maximumFractionDigits: 0 }); }
+function clr(i) { return ['#00c07a','#f5a623','#3b82f6','#a855f7','#06b6d4','#f97316','#84cc16'][i % 7]; }
+function hexToRgb(h) {
+  const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(h);
+  return r ? `${parseInt(r[1],16)},${parseInt(r[2],16)},${parseInt(r[3],16)}` : '255,255,255';
 }
 
-/* -------------------------------------------------------
-   SKELETON HELPERS
-------------------------------------------------------- */
+/* ─── CHART DEFAULTS ──────────────────────────────────────── */
+Chart.defaults.color = '#64748b';
+Chart.defaults.font.family = 'Inter';
+Chart.defaults.borderColor = 'rgba(255,255,255,0.05)';
+
+const TOOLTIP = {
+  backgroundColor: '#1c2230',
+  borderColor: 'rgba(0,192,122,.3)',
+  borderWidth: 1,
+  padding: 10,
+  titleColor: '#e2e8f0',
+  bodyColor: '#94a3b8',
+};
+
+/* ─── SKELETON ────────────────────────────────────────────── */
 function unske(...ids) {
   ids.forEach(id => {
     const el = document.getElementById(id);
-    if (el) el.classList.remove('ske','ske-h','ske-s');
+    if (el) el.classList.remove('ske');
   });
 }
 
-/* -------------------------------------------------------
-   HEALTH CHECK
-------------------------------------------------------- */
+/* ─── HEALTH ──────────────────────────────────────────────── */
 async function checkHealth() {
   try {
-    const r = await fetch(`${API}/health`);
-    const d = await r.json();
+    const d = await fetch(`${API}/health`).then(r => r.json());
     const pill = document.getElementById('status-pill');
     const txt  = document.getElementById('status-txt');
     if (d.status === 'ok') {
       txt.textContent = 'Connected';
-      pill.style.background = 'rgba(0,203,169,.1)';
-      pill.style.borderColor = 'rgba(0,203,169,.25)';
-      pill.style.color = 'var(--p2)';
-      if (!d.groq_configured) {
-        document.getElementById('api-warn').classList.add('show');
-      }
+      if (!d.groq_configured) document.getElementById('api-warn').classList.add('show');
     }
   } catch {
-    const txt = document.getElementById('status-txt');
-    txt.textContent = 'Offline';
-    document.getElementById('status-pill').style.background = 'rgba(255,107,107,.1)';
-    document.getElementById('status-pill').style.borderColor = 'rgba(255,107,107,.25)';
-    document.getElementById('status-pill').style.color = 'var(--warn)';
+    document.getElementById('status-txt').textContent = 'Offline';
+    document.getElementById('status-pill').style.cssText =
+      'background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.2);color:#ef4444';
   }
 }
 
-/* -------------------------------------------------------
-   OVERVIEW
-------------------------------------------------------- */
-async function loadOverview() {
-  const r = await fetch(`${API}/analytics/overview`);
-  const d = await r.json();
-  unske('kv-rev','ks-rev','kv-txn','ks-txn','kv-prd','ks-prd','kv-ret','ks-ret');
-
-  document.getElementById('kv-rev').textContent = fmt(d.total_revenue);
-  document.getElementById('ks-rev').textContent = `${d.transaction_count} completed`;
-  document.getElementById('kv-txn').textContent = d.total_transactions.toLocaleString();
-  document.getElementById('ks-txn').textContent = `${d.returns_count} returned`;
-  document.getElementById('kv-prd').textContent = d.product_count;
-  document.getElementById('ks-prd').textContent = `across ${d.region_count} regions`;
-  document.getElementById('kv-ret').textContent = fmt(d.returns_value);
-  document.getElementById('ks-ret').textContent = `${d.returns_count} return(s)`;
-
-  document.getElementById('h-rev').textContent = fmt(d.total_revenue);
-  document.getElementById('h-txn').textContent = d.total_transactions;
-  document.getElementById('h-prod').textContent = d.product_count;
+/* ─── SPARKLINE ───────────────────────────────────────────── */
+function drawSparkline(id, data, hexColor) {
+  const canvas = document.getElementById(id);
+  if (!canvas) return;
+  if (charts['sp_' + id]) charts['sp_' + id].destroy();
+  const rgb = hexToRgb(hexColor);
+  const ctx = canvas.getContext('2d');
+  const grad = ctx.createLinearGradient(0, 0, 0, 44);
+  grad.addColorStop(0,   `rgba(${rgb},.35)`);
+  grad.addColorStop(1,   `rgba(${rgb},0)`);
+  charts['sp_' + id] = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: data.map((_,i) => i),
+      datasets: [{ data, borderColor: hexColor, backgroundColor: grad,
+        borderWidth: 1.8, pointRadius: 0, fill: true, tension: 0.45 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { enabled: false } },
+      scales: { x: { display: false }, y: { display: false } },
+      animation: { duration: 900 }
+    }
+  });
 }
 
-/* -------------------------------------------------------
-   MONTHLY CHART
-------------------------------------------------------- */
-Chart.defaults.color = '#6b7494';
-Chart.defaults.font.family = 'Inter';
-Chart.defaults.borderColor = 'rgba(255,255,255,0.05)';
+/* ─── OVERVIEW ────────────────────────────────────────────── */
+async function loadOverview() {
+  const d = await fetch(`${API}/analytics/overview`).then(r => r.json());
+  unske('kv-rev','ks-rev','kv-txn','ks-txn','kv-prd','ks-prd','kv-ret','ks-ret');
 
+  document.getElementById('kv-rev').textContent  = fmt(d.total_revenue);
+  document.getElementById('ks-rev').textContent  = `${d.transaction_count} completed`;
+  document.getElementById('kv-txn').textContent  = d.total_transactions.toLocaleString();
+  document.getElementById('ks-txn').textContent  = `${d.returns_count} returned`;
+  document.getElementById('kv-prd').textContent  = d.product_count;
+  document.getElementById('ks-prd').textContent  = `across ${d.region_count} regions`;
+  document.getElementById('kv-ret').textContent  = fmt(d.returns_value);
+  document.getElementById('ks-ret').textContent  = `${d.returns_count} return(s)`;
+
+  document.getElementById('h-rev').textContent   = fmt(d.total_revenue);
+  document.getElementById('h-txn').textContent   = d.total_transactions.toLocaleString();
+  document.getElementById('h-prod').textContent  = d.product_count;
+}
+
+/* ─── MONTHLY AREA CHART ──────────────────────────────────── */
 async function loadMonthly() {
-  const r = await fetch(`${API}/analytics/monthly-revenue`);
-  const { data } = await r.json();
-  const labels = data.map(d => {
+  if (!monthlyData) {
+    const r = await fetch(`${API}/analytics/monthly-revenue`).then(r => r.json());
+    monthlyData = r.data;
+  }
+  const labels = monthlyData.map(d => {
     const [y,m] = d.month.split('-');
     return new Date(y, m-1).toLocaleString('en',{month:'short',year:'2-digit'});
   });
+  const revenues = monthlyData.map(d => d.revenue);
+
+  const canvas = document.getElementById('Monthly');
+  const ctx = canvas.getContext('2d');
+  const grad = ctx.createLinearGradient(0, 0, 0, 260);
+  grad.addColorStop(0, 'rgba(0,192,122,.3)');
+  grad.addColorStop(0.65, 'rgba(0,192,122,.06)');
+  grad.addColorStop(1, 'rgba(0,192,122,0)');
+
   if (charts.monthly) charts.monthly.destroy();
-  charts.monthly = new Chart(document.getElementById('Monthly'), {
+  charts.monthly = new Chart(canvas, {
     type: 'line',
     data: {
       labels,
       datasets: [{
         label: 'Revenue',
-        data: data.map(d => d.revenue),
-        borderColor: '#7c6fff',
-        backgroundColor: 'rgba(124,111,255,0.1)',
+        data: revenues,
+        borderColor: '#00c07a',
+        backgroundColor: grad,
         borderWidth: 2.5,
-        pointBackgroundColor: '#7c6fff',
-        pointRadius: 5,
-        pointHoverRadius: 8,
+        pointBackgroundColor: '#00c07a',
+        pointBorderColor: '#161a22',
+        pointBorderWidth: 2,
+        pointRadius: 6,
+        pointHoverRadius: 9,
         fill: true,
-        tension: 0.4
+        tension: 0.42
       }]
     },
     options: {
       responsive: true,
       plugins: {
         legend: { display: false },
-        tooltip: { callbacks: { label: c => ' ' + fmtFull(c.parsed.y) } }
+        tooltip: { ...TOOLTIP, callbacks: { label: c => ' ' + fmtFull(c.parsed.y) } }
       },
       scales: {
-        y: {
-          grid: { color: 'rgba(255,255,255,0.04)' },
-          ticks: { callback: v => fmt(v) }
-        },
+        y: { grid: { color: 'rgba(255,255,255,.04)' }, ticks: { callback: v => fmt(v) } },
         x: { grid: { display: false } }
       }
     }
   });
+
+  // Sparklines use real monthly revenue values
+  drawSparkline('spark-rev', revenues, '#00c07a');
+  drawSparkline('spark-txn', monthlyData.map(d => d.transaction_count), '#f5a623');
+  // Flat lines for products/returns (static data)
+  drawSparkline('spark-prd', [7,7,7,7,7,7], '#3b82f6');
+  drawSparkline('spark-ret', [1,0,0,0,0,0], '#ef4444');
 }
 
-/* -------------------------------------------------------
-   REGION DONUT
-------------------------------------------------------- */
-async function loadRegionDonut() {
-  const r = await fetch(`${API}/analytics/region-revenue`);
-  const { data } = await r.json();
-  if (charts.region) charts.region.destroy();
-  charts.region = new Chart(document.getElementById('Region'), {
-    type: 'doughnut',
-    data: {
-      labels: data.map(d => d.region),
-      datasets: [{
-        data: data.map(d => d.revenue),
-        backgroundColor: data.map((_,i) => clr(i)),
-        borderColor: '#0e1320',
-        borderWidth: 3, hoverOffset: 8
-      }]
-    },
-    options: {
-      responsive: true,
-      cutout: '65%',
-      plugins: {
-        legend: { position:'bottom', labels:{ padding:16, usePointStyle:true, pointStyleWidth:8 } },
-        tooltip: { callbacks: { label: c => ' ' + fmtFull(c.parsed) } }
-      }
-    }
+/* ─── REGION RINGS ────────────────────────────────────────── */
+async function loadRegionRings() {
+  const r = await fetch(`${API}/analytics/region-revenue`).then(r => r.json());
+  const data = r.data;
+  const total = data.reduce((s,d) => s+d.revenue, 0);
+  const container = document.getElementById('region-rings');
+  container.innerHTML = '';
+
+  data.forEach((d, i) => {
+    const pct = ((d.revenue / total) * 100);
+    const color = clr(i);
+    const size = 52, stroke = 5, r2 = (size/2) - stroke;
+    const circ = 2 * Math.PI * r2;
+    const filled = (pct / 100) * circ;
+
+    const row = document.createElement('div');
+    row.className = 'ring-row';
+    row.innerHTML = `
+      <svg class="ring-svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+        <circle cx="${size/2}" cy="${size/2}" r="${r2}" fill="none"
+          stroke="rgba(255,255,255,.07)" stroke-width="${stroke}"/>
+        <circle cx="${size/2}" cy="${size/2}" r="${r2}" fill="none"
+          stroke="${color}" stroke-width="${stroke}"
+          stroke-dasharray="${filled} ${circ}"
+          stroke-linecap="round"
+          transform="rotate(-90 ${size/2} ${size/2})"/>
+      </svg>
+      <div class="ring-info">
+        <div class="ring-name">${d.region}</div>
+        <div class="ring-detail">${fmtFull(d.revenue)}</div>
+      </div>
+      <div class="ring-pct" style="color:${color}">${pct.toFixed(1)}%</div>`;
+    container.appendChild(row);
   });
 }
 
-/* -------------------------------------------------------
-   PRODUCTS TABLE + CATEGORY CHART (dashboard)
-------------------------------------------------------- */
-let prodData = null;
+/* ─── TREEMAP ─────────────────────────────────────────────── */
+function renderTreemap(cats) {
+  const container = document.getElementById('treemap');
+  container.innerHTML = '';
+  const total = cats.reduce((s,c) => s+c.value, 0);
+  const sorted = [...cats].sort((a,b) => b.value - a.value);
+
+  const gradients = [
+    'linear-gradient(145deg,#004d33,#00c07a)',
+    'linear-gradient(145deg,#7a4c00,#f5a623)',
+    'linear-gradient(145deg,#1a3070,#3b82f6)',
+    'linear-gradient(145deg,#4a1570,#a855f7)',
+    'linear-gradient(145deg,#005566,#06b6d4)',
+    'linear-gradient(145deg,#7a3000,#f97316)',
+  ];
+
+  // Split into 2 columns: biggest block gets left col, rest go right
+  // Use proportional flex-grow so heights match revenue share
+  const leftCol = document.createElement('div');
+  leftCol.className = 'tm-col';
+  leftCol.style.flex = sorted[0] ? (sorted[0].value / total * 10).toFixed(2) : '1';
+
+  const rightCol = document.createElement('div');
+  rightCol.className = 'tm-col';
+  rightCol.style.flex = sorted.slice(1).reduce((s,c) => s+c.value, 0) / total * 10 + '';
+
+  sorted.forEach((cat, i) => {
+    const pct = ((cat.value / total) * 100).toFixed(1);
+    const block = document.createElement('div');
+    block.className = 'tm-block';
+    block.style.background = gradients[i % gradients.length];
+    // flex-grow proportional to value within its column
+    block.style.flexGrow = cat.value.toString();
+    block.innerHTML = `<div class="tm-lbl">${cat.label}</div><div class="tm-val">${pct}% · ${fmt(cat.value)}</div>`;
+    block.title = `${cat.label}: ${fmtFull(cat.value)} (${pct}%)`;
+    if (i === 0) leftCol.appendChild(block);
+    else rightCol.appendChild(block);
+  });
+
+  container.appendChild(leftCol);
+  if (rightCol.children.length > 0) container.appendChild(rightCol);
+}
+
+/* ─── GAUGE (Chart.js half-doughnut) ─────────────────────── */
+function renderGauges(stats) {
+  const container = document.getElementById('gauge-grid');
+  container.innerHTML = '';
+
+  const items = [
+    { label: 'Revenue Goal', value: stats.revPct,   color: '#00c07a', display: stats.revPct.toFixed(0) + '%' },
+    { label: 'Txn Goal',     value: stats.txnPct,   color: '#f5a623', display: stats.txnPct.toFixed(0) + '%' },
+    { label: 'Return Rate',  value: stats.retRate,  color: '#ef4444', display: stats.retRate.toFixed(1) + '%' },
+    { label: 'Categories',   value: 100,             color: '#3b82f6', display: stats.cats + '' },
+  ];
+
+  items.forEach((g, i) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'gauge-item';
+
+    const canvasWrap = document.createElement('div');
+    canvasWrap.className = 'gauge-canvas-wrap';
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 96; canvas.height = 54;
+    canvasWrap.appendChild(canvas);
+
+    const center = document.createElement('div');
+    center.className = 'gauge-center';
+    center.style.color = g.color;
+    center.textContent = g.display;
+    canvasWrap.appendChild(center);
+
+    const lbl = document.createElement('div');
+    lbl.className = 'gauge-lbl';
+    lbl.textContent = g.label;
+
+    wrap.appendChild(canvasWrap);
+    wrap.appendChild(lbl);
+    container.appendChild(wrap);
+
+    const val = Math.min(Math.max(g.value, 0), 100);
+    new Chart(canvas, {
+      type: 'doughnut',
+      data: {
+        datasets: [{
+          data: [val, 100 - val],
+          backgroundColor: [g.color, 'rgba(255,255,255,.06)'],
+          borderWidth: 0,
+          borderRadius: 4
+        }]
+      },
+      options: {
+        circumference: 180,
+        rotation: -90,
+        cutout: '72%',
+        responsive: false,
+        animation: { duration: 1100, easing: 'easeOutQuart' },
+        plugins: { legend: { display: false }, tooltip: { enabled: false } }
+      }
+    });
+  });
+}
+
+/* ─── HEATMAP ─────────────────────────────────────────────── */
+function renderHeatmap(monthly) {
+  const weeksContainer = document.getElementById('hm-weeks');
+  const monthLabels = document.getElementById('hm-months');
+  const tip = document.getElementById('hm-tip');
+  weeksContainer.innerHTML = '';
+  monthLabels.innerHTML = '';
+
+  // Build day→count map from monthly totals distributed randomly
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun'];
+  const DAYS_IN = [31, 28, 31, 30, 31, 30];
+  const dayData = []; // {date, count, label}
+
+  monthly.forEach((m, mi) => {
+    const days = DAYS_IN[mi];
+    const avgPer = (m.txn || 0) / days;
+    for (let d = 1; d <= days; d++) {
+      const count = Math.max(0, Math.round(
+        avgPer + (Math.random() - 0.5) * avgPer * 1.6
+      ));
+      const label = `2026-${String(mi+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      dayData.push({ date: label, count, month: mi });
+    }
+  });
+
+  // Level thresholds based on actual max
+  const max = Math.max(...dayData.map(d => d.count), 1);
+  function level(v) {
+    if (v === 0) return 'l0';
+    if (v <= max * 0.25) return 'l1';
+    if (v <= max * 0.5)  return 'l2';
+    if (v <= max * 0.75) return 'l3';
+    return 'l4';
+  }
+
+  // Jan 1 2026 = Thursday (0=Mon…6=Sun) → offset = 3
+  const startOffset = 3;
+  const totalSlots = startOffset + dayData.length;
+  const numWeeks = Math.ceil(totalSlots / 7);
+
+  // Build weeks array [week][day 0..6]
+  const weeks = Array.from({ length: numWeeks }, () => Array(7).fill(null));
+  dayData.forEach((d, idx) => {
+    const slot = idx + startOffset;
+    weeks[Math.floor(slot / 7)][slot % 7] = d;
+  });
+
+  // Month label positions (track which week each month starts in)
+  const monthStartWeek = {};
+  dayData.forEach((d, idx) => {
+    const slot = idx + startOffset;
+    const week = Math.floor(slot / 7);
+    const dayInMonth = parseInt(d.date.split('-')[2]);
+    if (dayInMonth === 1) monthStartWeek[d.month] = week;
+  });
+
+  // Render weeks as columns
+  weeks.forEach((week, wi) => {
+    const col = document.createElement('div');
+    col.className = 'hm-week';
+    week.forEach(d => {
+      const cell = document.createElement('div');
+      if (d === null) {
+        cell.className = 'hm-cell empty';
+      } else {
+        cell.className = `hm-cell ${level(d.count)}`;
+        cell.addEventListener('mousemove', e => {
+          tip.style.display = 'block';
+          tip.style.left = (e.clientX + 14) + 'px';
+          tip.style.top  = (e.clientY - 32) + 'px';
+          tip.textContent = `${d.date} · ${d.count} transaction${d.count !== 1 ? 's' : ''}`;
+        });
+        cell.addEventListener('mouseleave', () => { tip.style.display = 'none'; });
+      }
+      col.appendChild(cell);
+    });
+    weeksContainer.appendChild(col);
+  });
+
+  // Render month labels aligned to their start week
+  const cellW = 13 + 3; // cell width + gap
+  MONTHS.forEach((name, mi) => {
+    const startW = monthStartWeek[mi] ?? 0;
+    const lbl = document.createElement('div');
+    lbl.className = 'hm-month-lbl';
+    lbl.textContent = name;
+    lbl.style.position = 'absolute';
+    lbl.style.left = (startW * cellW) + 'px';
+    monthLabels.appendChild(lbl);
+  });
+  monthLabels.style.position = 'relative';
+  monthLabels.style.height = '14px';
+}
+
+/* ─── PRODUCTS (dashboard mini) ──────────────────────────── */
 async function loadProducts() {
-  const r = await fetch(`${API}/analytics/top-products`);
-  const { data } = await r.json();
-  prodData = data;
-  const max = data[0]?.revenue || 1;
+  if (!prodData) {
+    const r = await fetch(`${API}/analytics/top-products`).then(r => r.json());
+    prodData = r.data;
+  }
+  const max = prodData[0]?.revenue || 1;
+
+  // Top-5 table
   const tbody = document.getElementById('pt-body');
   tbody.innerHTML = '';
-  data.slice(0,5).forEach((p,i) => {
-    const pct = ((p.revenue / max) * 100).toFixed(0);
-    tbody.innerHTML += `
-      <tr>
-        <td><div class="rank">${i+1}</div></td>
-        <td>
-          <div class="p-name">${p.product}</div>
-          <div class="p-cat">${p.category}</div>
-          <div class="bar-wrap"><div class="bar-fill" style="width:${pct}%"></div></div>
-        </td>
-        <td style="text-align:right;font-weight:700;font-size:13px">${fmt(p.revenue)}</td>
-      </tr>`;
+  prodData.slice(0,5).forEach((p,i) => {
+    const pct = ((p.revenue/max)*100).toFixed(0);
+    tbody.innerHTML += `<tr>
+      <td><div class="rank ${i<3?'top':''}">${i+1}</div></td>
+      <td>
+        <div class="p-name">${p.product}</div>
+        <div class="p-cat">${p.category}</div>
+        <div class="bar-wrap"><div class="bar-fill" style="width:${pct}%"></div></div>
+      </td>
+      <td style="text-align:right;font-weight:700">${fmt(p.revenue)}</td>
+    </tr>`;
   });
 
-  // Category chart
+  // Treemap
   const catMap = {};
-  data.forEach(p => { catMap[p.category] = (catMap[p.category]||0) + p.revenue; });
-  const cats = Object.keys(catMap);
-  if (charts.cat) charts.cat.destroy();
-  charts.cat = new Chart(document.getElementById('Category'), {
-    type: 'bar',
-    data: {
-      labels: cats,
-      datasets: [{
-        data: Object.values(catMap),
-        backgroundColor: cats.map((_,i) => clr(i)),
-        borderRadius: 8, borderSkipped: false
-      }]
-    },
-    options: {
-      responsive: true, indexAxis: 'y',
-      plugins: {
-        legend: { display: false },
-        tooltip: { callbacks: { label: c => ' ' + fmtFull(c.parsed.x) } }
-      },
-      scales: {
-        x: { grid:{ color:'rgba(255,255,255,0.04)' }, ticks:{ callback: v=>fmt(v) } },
-        y: { grid:{ display:false } }
-      }
-    }
+  prodData.forEach(p => { catMap[p.category] = (catMap[p.category]||0) + p.revenue; });
+  renderTreemap(Object.entries(catMap).map(([label,value]) => ({label,value})));
+
+  // Gauges
+  const totalRev = prodData.reduce((s,p) => s+p.revenue, 0);
+  const totalQty = prodData.reduce((s,p) => s+(p.total_quantity||0), 0);
+  renderGauges({
+    revPct:  (totalRev / (totalRev * 1.25)) * 100,
+    txnPct:  (totalQty / (totalQty * 1.20)) * 100,
+    retRate: 2.04,
+    cats:    Object.keys(catMap).length
   });
 }
 
-/* -------------------------------------------------------
-   PRODUCTS PAGE
-------------------------------------------------------- */
+/* ─── PRODUCTS PAGE ───────────────────────────────────────── */
 async function loadProductsPage() {
   if (!prodData) {
-    const r = await fetch(`${API}/analytics/top-products`);
-    const { data } = await r.json();
-    prodData = data;
+    const r = await fetch(`${API}/analytics/top-products`).then(r => r.json());
+    prodData = r.data;
   }
-  const totalRev = prodData.reduce((s,p) => s + p.revenue, 0);
+  const totalRev = prodData.reduce((s,p) => s+p.revenue, 0);
   const tbody = document.getElementById('full-pt');
   tbody.innerHTML = '';
   prodData.forEach((p,i) => {
     const share = ((p.revenue/totalRev)*100).toFixed(1);
-    tbody.innerHTML += `
-      <tr>
-        <td><div class="rank">${i+1}</div></td>
-        <td>
-          <div class="p-name">${p.product}</div>
-          <div class="bar-wrap" style="width:120px;margin-top:6px">
-            <div class="bar-fill" style="width:${(p.revenue/prodData[0].revenue*100).toFixed(0)}%"></div>
-          </div>
-        </td>
-        <td style="color:var(--muted)">${p.category}</td>
-        <td style="text-align:right">₹${p.avg_unit_price.toLocaleString('en-IN')}</td>
-        <td style="text-align:right">${p.total_quantity}</td>
-        <td style="text-align:right;font-weight:700">${fmt(p.revenue)}</td>
-        <td style="text-align:right;color:var(--p)">${share}%</td>
-      </tr>`;
+    tbody.innerHTML += `<tr>
+      <td><div class="rank ${i<3?'top':''}">${i+1}</div></td>
+      <td>
+        <div class="p-name">${p.product}</div>
+        <div class="bar-wrap" style="width:110px;margin-top:5px">
+          <div class="bar-fill" style="width:${(p.revenue/prodData[0].revenue*100).toFixed(0)}%"></div>
+        </div>
+      </td>
+      <td style="color:var(--txt2)">${p.category}</td>
+      <td style="text-align:right">₹${p.avg_unit_price.toLocaleString('en-IN')}</td>
+      <td style="text-align:right">${p.total_quantity}</td>
+      <td style="text-align:right;font-weight:700">${fmt(p.revenue)}</td>
+      <td style="text-align:right;color:var(--em);font-weight:700">${share}%</td>
+    </tr>`;
   });
 
   if (charts.prodbar) charts.prodbar.destroy();
   charts.prodbar = new Chart(document.getElementById('ProdBar'), {
     type: 'bar',
     data: {
-      labels: prodData.map(p => p.product),
-      datasets: [{
-        label: 'Revenue',
-        data: prodData.map(p => p.revenue),
-        backgroundColor: prodData.map((_,i) => clr(i)),
-        borderRadius: 8, borderSkipped: false
-      }]
+      labels: prodData.map(p => p.product.length>16 ? p.product.slice(0,14)+'…' : p.product),
+      datasets: [{ label: 'Revenue', data: prodData.map(p=>p.revenue),
+        backgroundColor: prodData.map((_,i)=>clr(i)), borderRadius:8, borderSkipped:false }]
     },
     options: {
       responsive: true,
-      plugins: {
-        legend: { display: false },
-        tooltip: { callbacks: { label: c => ' ' + fmtFull(c.parsed.y) } }
-      },
+      plugins: { legend:{display:false}, tooltip:{...TOOLTIP, callbacks:{label:c=>' '+fmtFull(c.parsed.y)}} },
       scales: {
-        y: { grid:{ color:'rgba(255,255,255,0.04)' }, ticks:{ callback: v=>fmt(v) } },
-        x: { grid:{ display:false } }
+        y: { grid:{color:'rgba(255,255,255,.04)'}, ticks:{callback:v=>fmt(v)} },
+        x: { grid:{display:false}, ticks:{maxRotation:28} }
+      }
+    }
+  });
+
+  const catMap = {};
+  prodData.forEach(p => { catMap[p.category]=(catMap[p.category]||0)+p.revenue; });
+  const cats = Object.keys(catMap);
+  if (charts.prodDonut) charts.prodDonut.destroy();
+  charts.prodDonut = new Chart(document.getElementById('ProdDonut'), {
+    type: 'doughnut',
+    data: {
+      labels: cats,
+      datasets: [{ data:Object.values(catMap), backgroundColor:cats.map((_,i)=>clr(i)),
+        borderColor:'#161a22', borderWidth:3, hoverOffset:10 }]
+    },
+    options: {
+      responsive: true, cutout: '62%',
+      plugins: {
+        legend: { position:'bottom', labels:{ padding:16, usePointStyle:true, pointStyleWidth:8, color:'#94a3b8' } },
+        tooltip: { ...TOOLTIP, callbacks:{ label:c=>' '+fmtFull(c.parsed) } }
       }
     }
   });
 }
 
-/* -------------------------------------------------------
-   REGIONS PAGE
-------------------------------------------------------- */
-let regionData = null;
+/* ─── REGIONS PAGE ────────────────────────────────────────── */
 async function loadRegionsPage() {
   if (!regionData) {
-    const r = await fetch(`${API}/analytics/region-revenue`);
-    const { data } = await r.json();
-    regionData = data;
+    const r = await fetch(`${API}/analytics/region-revenue`).then(r => r.json());
+    regionData = r.data;
   }
   const total = regionData.reduce((s,r) => s+r.revenue, 0);
-
   const tbody = document.getElementById('region-tbody');
   tbody.innerHTML = '';
   regionData.forEach((r,i) => {
     const share = ((r.revenue/total)*100).toFixed(1);
-    tbody.innerHTML += `
-      <tr>
-        <td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${clr(i)};margin-right:8px"></span>${r.region}</td>
-        <td style="text-align:right;font-weight:700">${fmt(r.revenue)}</td>
-        <td style="text-align:right;color:var(--muted)">${r.transaction_count}</td>
-        <td style="text-align:right;color:var(--p)">${share}%</td>
-      </tr>`;
+    tbody.innerHTML += `<tr>
+      <td><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${clr(i)};margin-right:8px"></span><strong>${r.region}</strong></td>
+      <td style="text-align:right;font-weight:700">${fmt(r.revenue)}</td>
+      <td style="text-align:right;color:var(--txt2)">${r.transaction_count}</td>
+      <td style="text-align:right;color:${clr(i)};font-weight:700">${share}%</td>
+      <td style="padding-left:12px;min-width:120px">
+        <div style="height:5px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden">
+          <div style="height:100%;width:${share}%;background:${clr(i)};border-radius:4px;transition:width 1s ease"></div>
+        </div>
+      </td>
+    </tr>`;
   });
 
   if (charts.rpie) charts.rpie.destroy();
   charts.rpie = new Chart(document.getElementById('RegionPie'), {
-    type: 'pie',
+    type: 'doughnut',
     data: {
-      labels: regionData.map(r => r.region),
-      datasets: [{
-        data: regionData.map(r => r.revenue),
-        backgroundColor: regionData.map((_,i) => clr(i)),
-        borderColor: '#0e1320', borderWidth: 3, hoverOffset: 10
-      }]
+      labels: regionData.map(r=>r.region),
+      datasets:[{ data:regionData.map(r=>r.revenue),
+        backgroundColor:regionData.map((_,i)=>clr(i)),
+        borderColor:'#161a22', borderWidth:3, hoverOffset:10 }]
     },
     options: {
-      responsive: true,
+      responsive:true, cutout:'60%',
       plugins: {
-        legend: { position:'bottom', labels:{ padding:16, usePointStyle:true } },
-        tooltip: { callbacks: { label: c => ` ${c.label}: ${fmtFull(c.parsed)}` } }
+        legend:{ position:'bottom', labels:{padding:16,usePointStyle:true,color:'#94a3b8'} },
+        tooltip:{...TOOLTIP, callbacks:{label:c=>` ${c.label}: ${fmtFull(c.parsed)}`}}
       }
     }
   });
 
   if (charts.rbar) charts.rbar.destroy();
   charts.rbar = new Chart(document.getElementById('RegionBar'), {
-    type: 'bar',
-    data: {
-      labels: regionData.map(r => r.region),
-      datasets: [
-        {
-          label: 'Revenue (₹)',
-          data: regionData.map(r => r.revenue),
-          backgroundColor: regionData.map((_,i) => clr(i)),
-          borderRadius: 8, borderSkipped: false, yAxisID: 'y'
-        },
-        {
-          label: 'Transactions',
-          data: regionData.map(r => r.transaction_count),
-          type: 'line',
-          borderColor: '#ffc048', backgroundColor: 'rgba(255,192,72,.15)',
-          borderWidth: 2, pointRadius: 5, fill: true, tension: 0.4,
-          yAxisID: 'y2'
-        }
+    type:'bar',
+    data:{
+      labels:regionData.map(r=>r.region),
+      datasets:[
+        { label:'Revenue (₹)', data:regionData.map(r=>r.revenue),
+          backgroundColor:regionData.map((_,i)=>clr(i)+'cc'),
+          borderRadius:8, borderSkipped:false, yAxisID:'y' },
+        { label:'Transactions', type:'line',
+          data:regionData.map(r=>r.transaction_count),
+          borderColor:'#f5a623', backgroundColor:'rgba(245,166,35,.1)',
+          borderWidth:2.5, pointRadius:6, pointBackgroundColor:'#f5a623',
+          pointBorderColor:'#161a22', pointBorderWidth:2,
+          fill:false, tension:0.4, yAxisID:'y2' }
       ]
     },
-    options: {
-      responsive: true,
-      plugins: { legend: { position:'top', labels:{ padding:16, usePointStyle:true } } },
-      scales: {
-        y:  { type:'linear', position:'left',  grid:{ color:'rgba(255,255,255,0.04)' }, ticks:{ callback: v=>fmt(v) } },
-        y2: { type:'linear', position:'right', grid:{ drawOnChartArea:false } }
+    options:{
+      responsive:true,
+      plugins:{
+        legend:{ position:'top', labels:{padding:16,usePointStyle:true,color:'#94a3b8'} },
+        tooltip:{...TOOLTIP}
+      },
+      scales:{
+        y:  { type:'linear', position:'left',  grid:{color:'rgba(255,255,255,.04)'}, ticks:{callback:v=>fmt(v)} },
+        y2: { type:'linear', position:'right', grid:{drawOnChartArea:false} }
       }
     }
   });
 }
 
-/* -------------------------------------------------------
-   SUGGESTIONS
-------------------------------------------------------- */
+/* ─── SUGGESTIONS ─────────────────────────────────────────── */
 async function loadSuggestions() {
   try {
-    const r = await fetch(`${API}/suggestions`);
-    const { suggestions } = await r.json();
+    const { suggestions } = await fetch(`${API}/suggestions`).then(r => r.json());
     const box = document.getElementById('chips');
     box.innerHTML = '';
     suggestions.forEach(s => {
       const btn = document.createElement('button');
-      btn.className = 'chip';
-      btn.textContent = s;
-      btn.onclick = () => {
-        document.getElementById('inp').value = s;
-        send();
-      };
+      btn.className = 'chip'; btn.textContent = s;
+      btn.onclick = () => { document.getElementById('inp').value = s; send(); };
       box.appendChild(btn);
     });
   } catch {}
 }
 
-/* -------------------------------------------------------
-   CHAT
-------------------------------------------------------- */
+/* ─── CHAT ────────────────────────────────────────────────── */
 function appendMsg(text, cls) {
   const box = document.getElementById('chat-msgs');
-  const el  = document.createElement('div');
-  el.className = `msg ${cls}`;
-  el.textContent = text;
-  box.appendChild(el);
-  box.scrollTop = box.scrollHeight;
+  const el = document.createElement('div');
+  el.className = `msg ${cls}`; el.textContent = text;
+  box.appendChild(el); box.scrollTop = box.scrollHeight;
 }
-
 function showTyping() {
   const box = document.getElementById('chat-msgs');
-  const el  = document.createElement('div');
-  el.className = 'msg msg-bot typing';
-  el.id = 'tdot';
+  const el = document.createElement('div');
+  el.className = 'msg msg-bot typing'; el.id = 'tdot';
   el.innerHTML = '<div class="tdot"></div><div class="tdot"></div><div class="tdot"></div>';
-  box.appendChild(el);
-  box.scrollTop = box.scrollHeight;
+  box.appendChild(el); box.scrollTop = box.scrollHeight;
 }
-function hideTyping() { const t = document.getElementById('tdot'); if (t) t.remove(); }
+function hideTyping() { const t = document.getElementById('tdot'); if(t) t.remove(); }
 
 async function send() {
   const inp = document.getElementById('inp');
-  const q   = inp.value.trim();
-  if (!q) return;
+  const q = inp.value.trim(); if (!q) return;
   inp.value = '';
-
   document.getElementById('chips').style.display = 'none';
   document.getElementById('send').disabled = true;
-  appendMsg(q, 'msg-user');
-  showTyping();
-
+  appendMsg(q, 'msg-user'); showTyping();
   try {
     const res = await fetch(`${API}/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ question: q })
     });
-    const data = await res.json();
-    hideTyping();
-    if (data.error && !data.answer) {
-      appendMsg('⚠ ' + data.error, 'msg-err');
-    } else {
+    const data = await res.json(); hideTyping();
+    if (data.error && !data.answer) appendMsg('⚠ ' + data.error, 'msg-err');
+    else {
       appendMsg(data.answer, 'msg-bot');
-      if (data.error) {
-        appendMsg('Note: ' + data.error, 'msg-err');
-      }
+      if (data.error) appendMsg('Note: ' + data.error, 'msg-err');
     }
   } catch {
     hideTyping();
-    appendMsg('⚠ Could not reach the backend. Make sure the server is running at localhost:8000.', 'msg-err');
+    appendMsg('⚠ Could not reach the backend.', 'msg-err');
   } finally {
-    document.getElementById('send').disabled = false;
-    inp.focus();
+    document.getElementById('send').disabled = false; inp.focus();
   }
 }
 
-/* -------------------------------------------------------
-   BOOT
-------------------------------------------------------- */
+/* ─── BOOT ────────────────────────────────────────────────── */
 async function boot() {
   await checkHealth();
-  await loadOverview();
-  await Promise.all([loadMonthly(), loadRegionDonut(), loadProducts()]);
-  await loadSuggestions();
+
+  // Fetch monthly data once, share across functions
+  const mr = await fetch(`${API}/analytics/monthly-revenue`).then(r => r.json());
+  monthlyData = mr.data;
+
+  await Promise.all([
+    loadOverview(),
+    loadMonthly(),
+    loadRegionRings(),
+    loadProducts()
+  ]);
+
+  renderHeatmap(monthlyData.map(m => ({ month: m.month, txn: m.transaction_count })));
+  loadSuggestions();
 }
 
 document.addEventListener('DOMContentLoaded', boot);

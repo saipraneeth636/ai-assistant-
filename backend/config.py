@@ -9,7 +9,8 @@ from pathlib import Path
 
 try:
     from dotenv import load_dotenv
-    load_dotenv(dotenv_path=Path(__file__).parent / ".env")
+    _env_path = Path(__file__).resolve().parent / ".env"
+    load_dotenv(dotenv_path=_env_path, override=True)
 except ImportError:
     pass  # python-dotenv not installed; rely on system env vars
 

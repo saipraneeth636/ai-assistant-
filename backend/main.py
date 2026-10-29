@@ -1,17 +1,23 @@
 """
 SalesIQ FastAPI application entry point.
+
+Run with:
+    uvicorn main:app --reload --port 8000
+
+Then visit http://localhost:8000 — the full dashboard will load.
 """
 
 import logging
 import sys
 from contextlib import asynccontextmanager
+from pathlib import Path
 
-# pyrefly: ignore[missing-import]
 from fastapi import FastAPI
-# pyrefly: ignore[missing-import]
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
-from config import CORS_ORIGINS, GROQ_API_KEY
+from config import GROQ_API_KEY
 from database import init_db
 from models import HealthResponse
 from routes.analytics_routes import router as analytics_router
@@ -26,6 +32,9 @@ logging.basicConfig(
     handlers=[logging.StreamHandler(sys.stdout)],
 )
 logger = logging.getLogger(__name__)
+
+# Project root = one level above backend/
+FRONTEND_DIR = Path(__file__).parent.parent
 
 
 # ---------------------------------------------------------------------------
@@ -55,16 +64,18 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS — allow the React dev server and the deployed frontend
+# CORS — allow everything since frontend is served on the same origin
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=CORS_ORIGINS,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Routers
+# ---------------------------------------------------------------------------
+# API Routers  ← registered BEFORE any static/fallback routes
+# ---------------------------------------------------------------------------
 app.include_router(analytics_router)
 app.include_router(chat_router)
 
@@ -79,3 +90,19 @@ def health():
         "version": "1.0.0",
         "groq_configured": bool(GROQ_API_KEY),
     }
+
+
+# ---------------------------------------------------------------------------
+# Frontend — serve index.html at "/"
+#   http://localhost:8000  →  SalesIQ Dashboard
+# ---------------------------------------------------------------------------
+@app.get("/", include_in_schema=False)
+def serve_frontend():
+    """Return the SalesIQ single-page dashboard."""
+    return FileResponse(FRONTEND_DIR / "index.html")
+
+
+# Mount static assets folder (images, extra CSS, etc.) if it exists
+_assets = FRONTEND_DIR / "assets"
+if _assets.exists():
+    app.mount("/assets", StaticFiles(directory=str(_assets)), name="assets")
