@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SalesIQ — AI Business Intelligence</title>
+  <meta name="description" content="SalesIQ: AI-powered sales analytics dashboard with a Groq-driven business intelligence assistant." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    /* =====================================================
+       TOKENS
+    ===================================================== */
+    :root{
+      --bg:#07090f;
+      --panel:#0e1320;
+      --panel2:#141b2d;
+      --border:rgba(255,255,255,0.06);
+      --border2:rgba(255,255,255,0.12);
+      --p:#7c6fff;
+      --p2:#00cba9;
+      --warn:#ff6b6b;
+      --gold:#ffc048;
+      --txt:#dde2f0;
+      --muted:#6b7494;
+      --r:14px;
+      --rs:9px;
+      --sh:0 8px 40px rgba(0,0,0,0.6);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;overflow-x:hidden}
+
+    /* ambient glows */
+    .glow-a{position:fixed;top:-300px;left:-200px;width:700px;height:700px;background:radial-gradient(circle,rgba(124,111,255,.12) 0%,transparent 65%);border-radius:50%;pointer-events:none;animation:ga 14s ease-in-out infinite alternate}
+    .glow-b{position:fixed;bottom:-250px;right:-150px;width:600px;height:600px;background:radial-gradient(circle,rgba(0,203,169,.09) 0%,transparent 65%);border-radius:50%;pointer-events:none;animation:gb 18s ease-in-out infinite alternate}
+    @keyframes ga{to{transform:translate(80px,60px)}}
+    @keyframes gb{to{transform:translate(-60px,-40px)}}
+
+    /* =====================================================
+       SCROLLBAR
+    ===================================================== */
+    ::-webkit-scrollbar{width:5px}
+    ::-webkit-scrollbar-track{background:transparent}
+    ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+
+    /* =====================================================
+       NAVBAR
+    ===================================================== */
+    nav{
+      position:sticky;top:0;z-index:300;
+      display:flex;align-items:center;justify-content:space-between;
+      padding:0 40px;height:64px;
+      background:rgba(7,9,15,.85);
+      backdrop-filter:blur(20px);
+      border-bottom:1px solid var(--border);
+    }
+    .nav-logo{display:flex;align-items:center;gap:12px;text-decoration:none}
+    .nav-logo-icon{
+      width:36px;height:36px;border-radius:10px;
+      background:linear-gradient(135deg,var(--p),var(--p2));
+      display:flex;align-items:center;justify-content:center;font-size:17px
+    }
+    .nav-logo-text{font-size:18px;font-weight:800;color:var(--txt);letter-spacing:-.5px}
+    .nav-logo-text span{color:var(--p)}
+    .nav-links{display:flex;gap:6px}
+    .nav-link{
+      padding:7px 16px;border-radius:var(--rs);font-size:13.5px;font-weight:500;
+      color:var(--muted);cursor:pointer;transition:all .2s;border:none;background:none;
+      font-family:inherit
+    }
+    .nav-link:hover{color:var(--txt);background:var(--panel2)}
+    .nav-link.active{color:var(--txt);background:var(--panel2);border:1px solid var(--border2)}
+    .nav-right{display:flex;align-items:center;gap:10px}
+    .status-pill{
+      display:flex;align-items:center;gap:7px;
+      padding:5px 12px;border-radius:20px;
+      background:rgba(0,203,169,.1);border:1px solid rgba(0,203,169,.25);
+      font-size:12px;font-weight:500;color:var(--p2)
+    }
+    .status-dot{width:7px;height:7px;border-radius:50%;background:var(--p2);animation:blink 2s ease-in-out infinite}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+    .btn-ask{
+      display:flex;align-items:center;gap:8px;
+      padding:8px 18px;border-radius:var(--rs);
+      background:linear-gradient(135deg,var(--p),#a49aff);
+      color:#fff;font-size:13.5px;font-weight:600;border:none;cursor:pointer;
+      font-family:inherit;transition:transform .2s,box-shadow .2s
+    }
+    .btn-ask:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(124,111,255,.45)}
+
+    /* =====================================================
+       PAGE SECTIONS
+    ===================================================== */
+    .section{display:none;padding:36px 40px 60px;max-width:1600px;margin:0 auto}
+    .section.active{display:block}
+
+    /* =====================================================
+       HERO BANNER (dashboard top)
+    ===================================================== */
+    .hero{
+      background:linear-gradient(135deg,rgba(124,111,255,.12) 0%,rgba(0,203,169,.06) 100%);
+      border:1px solid var(--border2);border-radius:20px;
+      padding:36px 40px;margin-bottom:32px;
+      display:flex;justify-content:space-between;align-items:center;
+      position:relative;overflow:hidden
+    }
+    .hero::before{
+      content:'';position:absolute;right:-80px;top:-80px;
+      width:300px;height:300px;
+      background:radial-gradient(circle,rgba(124,111,255,.15) 0%,transparent 70%);
+      border-radius:50%
+    }
+    .hero-title{font-size:30px;font-weight:800;letter-spacing:-1px;margin-bottom:6px}
+    .hero-title span{
+      background:linear-gradient(135deg,var(--p),var(--p2));
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent
+    }
+    .hero-sub{font-size:14px;color:var(--muted)}
+    .hero-stats{display:flex;gap:32px;z-index:1}
+    .hero-stat-val{font-size:22px;font-weight:700;letter-spacing:-.5px}
+    .hero-stat-lbl{font-size:11px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:.5px}
+
+    /* =====================================================
+       KPI CARDS
+    ===================================================== */
+    .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-bottom:28px}
+    .kpi{
+      background:var(--panel);border:1px solid var(--border);border-radius:var(--r);
+      padding:22px;position:relative;overflow:hidden;cursor:default;
+      transition:transform .2s,box-shadow .2s
+    }
+    .kpi:hover{transform:translateY(-3px);box-shadow:var(--sh)}
+    .kpi::after{
+      content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:var(--r) var(--r) 0 0
+    }
+    .kpi:nth-child(1)::after{background:linear-gradient(90deg,var(--p),#a49aff)}
+    .kpi:nth-child(2)::after{background:linear-gradient(90deg,var(--p2),#00b894)}
+    .kpi:nth-child(3)::after{background:linear-gradient(90deg,var(--gold),#ff9a00)}
+    .kpi:nth-child(4)::after{background:linear-gradient(90deg,var(--warn),#ff9f7f)}
+    .kpi-icon{
+      width:44px;height:44px;border-radius:var(--rs);
+      display:flex;align-items:center;justify-content:center;font-size:21px;margin-bottom:14px
+    }
+    .kpi:nth-child(1) .kpi-icon{background:rgba(124,111,255,.14)}
+    .kpi:nth-child(2) .kpi-icon{background:rgba(0,203,169,.14)}
+    .kpi:nth-child(3) .kpi-icon{background:rgba(255,192,72,.14)}
+    .kpi:nth-child(4) .kpi-icon{background:rgba(255,107,107,.14)}
+    .kpi-lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-weight:600}
+    .kpi-val{font-size:26px;font-weight:800;letter-spacing:-1px;margin:6px 0 4px}
+    .kpi-sub{font-size:12px;color:var(--muted)}
+
+    /* skeleton */
+    .ske{
+      background:linear-gradient(90deg,var(--panel2) 25%,rgba(255,255,255,.03) 50%,var(--panel2) 75%);
+      background-size:400% 100%;animation:ske 1.4s ease infinite;border-radius:6px
+    }
+    @keyframes ske{from{background-position:400% 0}to{background-position:-400% 0}}
+    .ske-h{height:26px;width:70%}
+    .ske-s{height:14px;width:55%;margin-top:4px}
+
+    /* =====================================================
+       CHART CARDS
+    ===================================================== */
+    .row2{display:grid;grid-template-columns:2fr 1fr;gap:18px;margin-bottom:18px}
+    .row3{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
+    .card{
+      background:var(--panel);border:1px solid var(--border);
+      border-radius:var(--r);padding:24px
+    }
+    .card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px}
+    .card-title{font-size:14.5px;font-weight:700}
+    .card-sub{font-size:11.5px;color:var(--muted);margin-top:3px}
+    .badge{
+      padding:3px 10px;border-radius:20px;font-size:10.5px;font-weight:700;
+      background:rgba(124,111,255,.14);color:var(--p);letter-spacing:.3px
+    }
+    .badge-green{background:rgba(0,203,169,.14);color:var(--p2)}
+
+    /* products table */
+    .pt{width:100%;border-collapse:collapse}
+    .pt th{text-align:left;font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;padding:0 0 12px}
+    .pt td{padding:11px 0;font-size:13px;border-bottom:1px solid var(--border);vertical-align:top}
+    .pt tr:last-child td{border-bottom:none}
+    .p-name{font-weight:700;font-size:13px}
+    .p-cat{font-size:11px;color:var(--muted);margin-top:2px}
+    .bar-wrap{height:3px;background:var(--panel2);border-radius:4px;overflow:hidden;margin-top:7px;width:100px}
+    .bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--p),var(--p2))}
+    .rank{
+      width:22px;height:22px;border-radius:50%;background:var(--panel2);
+      display:flex;align-items:center;justify-content:center;
+      font-size:10px;font-weight:700;color:var(--muted);flex-shrink:0
+    }
+
+    /* =====================================================
+       AI ASSISTANT PAGE
+    ===================================================== */
+    .ai-layout{display:grid;grid-template-columns:1fr 440px;gap:24px;height:calc(100vh - 128px)}
+    .ai-info{display:flex;flex-direction:column;gap:18px;overflow-y:auto}
+    .ai-hero{
+      background:linear-gradient(135deg,rgba(124,111,255,.15),rgba(0,203,169,.06));
+      border:1px solid rgba(124,111,255,.2);border-radius:var(--r);padding:32px
+    }
+    .ai-hero-tag{
+      display:inline-flex;align-items:center;gap:6px;
+      padding:4px 12px;border-radius:20px;
+      background:rgba(124,111,255,.15);border:1px solid rgba(124,111,255,.3);
+      font-size:11px;font-weight:600;color:var(--p);margin-bottom:16px
+    }
+    .ai-hero-title{font-size:26px;font-weight:800;letter-spacing:-.8px;margin-bottom:8px}
+    .ai-hero-desc{font-size:14px;color:var(--muted);line-height:1.7}
+    .capability-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .cap{
+      background:var(--panel);border:1px solid var(--border);border-radius:var(--r);padding:16px;
+      transition:border-color .2s
+    }
+    .cap:hover{border-color:var(--border2)}
+    .cap-icon{font-size:22px;margin-bottom:10px}
+    .cap-title{font-size:13px;font-weight:600;margin-bottom:4px}
+    .cap-desc{font-size:12px;color:var(--muted);line-height:1.5}
+
+    /* =====================================================
+       CHAT WIDGET
+    ===================================================== */
+    .chat-widget{
+      background:var(--panel);border:1px solid var(--border);border-radius:var(--r);
+      display:flex;flex-direction:column;height:100%;overflow:hidden
+    }
+    .chat-top{
+      padding:18px 20px;
+      background:linear-gradient(135deg,rgba(124,111,255,.12),rgba(0,203,169,.05));
+      border-bottom:1px solid var(--border);
+      display:flex;align-items:center;gap:12px
+    }
+    .chat-avatar{
+      width:40px;height:40px;border-radius:50%;
+      background:linear-gradient(135deg,var(--p),var(--p2));
+      display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0
+    }
+    .chat-name{font-weight:700;font-size:14.5px}
+    .chat-online{font-size:11px;color:var(--p2);display:flex;align-items:center;gap:5px}
+    .chat-msgs{
+      flex:1;overflow-y:auto;padding:20px;
+      display:flex;flex-direction:column;gap:14px
+    }
+    .chat-msgs::-webkit-scrollbar{width:3px}
+
+    .msg{max-width:88%;padding:12px 15px;border-radius:14px;font-size:13.5px;line-height:1.6;animation:msgIn .3s ease}
+    @keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    .msg-bot{background:var(--panel2);border:1px solid var(--border);align-self:flex-start;border-bottom-left-radius:4px}
+    .msg-user{
+      background:linear-gradient(135deg,var(--p),#a49aff);
+      color:#fff;align-self:flex-end;border-bottom-right-radius:4px
+    }
+    .msg-err{background:rgba(255,107,107,.1);border:1px solid rgba(255,107,107,.25);color:var(--warn);align-self:flex-start}
+
+    .typing{display:flex;gap:5px;align-items:center;padding:14px 18px}
+    .tdot{width:7px;height:7px;border-radius:50%;background:var(--muted);animation:tb 1.2s ease-in-out infinite}
+    .tdot:nth-child(2){animation-delay:.2s}
+    .tdot:nth-child(3){animation-delay:.4s}
+    @keyframes tb{0%,100%{transform:translateY(0)}40%{transform:translateY(-6px)}}
+
+    .chips{padding:0 16px 12px;display:flex;flex-wrap:wrap;gap:6px}
+    .chip{
+      padding:5px 11px;border-radius:20px;font-size:11.5px;font-weight:500;
+      background:var(--panel2);border:1px solid var(--border);
+      color:var(--muted);cursor:pointer;font-family:inherit;transition:all .2s
+    }
+    .chip:hover{border-color:var(--p);color:var(--p)}
+
+    .chat-foot{
+      padding:14px 16px;border-top:1px solid var(--border);
+      display:flex;gap:8px
+    }
+    #inp{
+      flex:1;background:var(--panel2);border:1px solid var(--border);
+      border-radius:var(--rs);color:var(--txt);font-family:inherit;
+      font-size:13.5px;padding:11px 14px;outline:none;transition:border-color .2s
+    }
+    #inp:focus{border-color:var(--p)}
+    #inp::placeholder{color:var(--muted)}
+    #send{
+      width:42px;height:42px;border-radius:var(--rs);
+      background:linear-gradient(135deg,var(--p),#a49aff);
+      border:none;color:#fff;font-size:17px;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;
+      transition:transform .15s;flex-shrink:0
+    }
+    #send:hover{transform:scale(1.07)}
+    #send:disabled{opacity:.5;cursor:not-allowed}
+
+    /* API key banner */
+    .api-warn{
+      background:rgba(255,192,72,.08);border:1px solid rgba(255,192,72,.3);
+      border-radius:var(--rs);padding:12px 16px;font-size:12.5px;color:var(--gold);
+      margin:12px 16px 0;display:none
+    }
+    .api-warn.show{display:block}
+    .api-warn a{color:var(--gold);opacity:.8}
+
+    /* =====================================================
+       RESPONSIVE
+    ===================================================== */
+    @media(max-width:1100px){
+      .ai-layout{grid-template-columns:1fr}
+      .ai-layout .chat-widget{height:520px}
+      .row2{grid-template-columns:1fr}
+      .kpi-grid{grid-template-columns:1fr 1fr}
+    }
+    @media(max-width:768px){
+      nav{padding:0 20px}
+      .section{padding:24px 20px 50px}
+      .kpi-grid{grid-template-columns:1fr 1fr}
+      .row3{grid-template-columns:1fr}
+      .hero{flex-direction:column;gap:20px}
+      .hero-stats{flex-wrap:wrap;gap:20px}
+      .capability-grid{grid-template-columns:1fr}
+      .nav-links{display:none}
+    }
+  </style>
+</head>
+<body>
+
+<div class="glow-a"></div>
+<div class="glow-b"></div>
+
+<!-- ========================================================
+     NAVBAR
+======================================================== -->
+<nav>
+  <a class="nav-logo" href="#">
+    <div class="nav-logo-icon">📊</div>
+    <div class="nav-logo-text">Sales<span>IQ</span></div>
+  </a>
+
+  <div class="nav-links">
+    <button class="nav-link active" id="tab-dashboard" onclick="showSection('dashboard')">Dashboard</button>
+    <button class="nav-link" id="tab-products"  onclick="showSection('products')">Products</button>
+    <button class="nav-link" id="tab-regions"   onclick="showSection('regions')">Regions</button>
+    <button class="nav-link" id="tab-assistant" onclick="showSection('assistant')">AI Assistant</button>
+  </div>
+
+  <div class="nav-right">
+    <div class="status-pill" id="status-pill">
+      <span class="status-dot"></span>
+      <span id="status-txt">Connecting…</span>
+    </div>
+    <button class="btn-ask" onclick="showSection('assistant')">🤖 Ask AI</button>
+  </div>
+</nav>
+
+<!-- ========================================================
+     DASHBOARD SECTION
+======================================================== -->
+<div class="section active" id="sec-dashboard">
+
+  <!-- Hero -->
+  <div class="hero">
+    <div>
+      <div class="hero-title">Business <span>Analytics</span> Overview</div>
+      <div class="hero-sub">All figures are from completed transactions · Updated live from the database</div>
+    </div>
+    <div class="hero-stats">
+      <div>
+        <div class="hero-stat-val" id="h-rev">—</div>
+        <div class="hero-stat-lbl">Net Revenue</div>
+      </div>
+      <div>
+        <div class="hero-stat-val" id="h-txn">—</div>
+        <div class="hero-stat-lbl">Transactions</div>
+      </div>
+      <div>
+        <div class="hero-stat-val" id="h-prod">—</div>
+        <div class="hero-stat-lbl">Products</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPI row -->
+  <div class="kpi-grid">
+    <div class="kpi">
+      <div class="kpi-icon">💰</div>
+      <div class="kpi-lbl">Total Revenue</div>
+      <div class="kpi-val ske ske-h" id="kv-rev">&nbsp;</div>
+      <div class="kpi-sub ske ske-s" id="ks-rev">&nbsp;</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-icon">🧾</div>
+      <div class="kpi-lbl">Transactions</div>
+      <div class="kpi-val ske ske-h" id="kv-txn">&nbsp;</div>
+      <div class="kpi-sub ske ske-s" id="ks-txn">&nbsp;</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-icon">📦</div>
+      <div class="kpi-lbl">Products Tracked</div>
+      <div class="kpi-val ske ske-h" id="kv-prd">&nbsp;</div>
+      <div class="kpi-sub ske ske-s" id="ks-prd">&nbsp;</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-icon">↩️</div>
+      <div class="kpi-lbl">Returns Value</div>
+      <div class="kpi-val ske ske-h" id="kv-ret">&nbsp;</div>
+      <div class="kpi-sub ske ske-s" id="ks-ret">&nbsp;</div>
+    </div>
+  </div>
+
+  <!-- Row 1: line + donut -->
+  <div class="row2">
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Monthly Revenue Trend</div>
+          <div class="card-sub">Completed transactions · INR (₹)</div>
+        </div>
+        <span class="badge">Jan – Jun 2026</span>
+      </div>
+      <canvas id="Monthly" height="220"></canvas>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Revenue by Region</div>
+          <div class="card-sub">Completed sales share</div>
+        </div>
+      </div>
+      <canvas id="Region" height="220"></canvas>
+    </div>
+  </div>
+
+  <!-- Row 2: products mini + category bar -->
+  <div class="row3">
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Top Products</div>
+          <div class="card-sub">By net revenue</div>
+        </div>
+        <span class="badge badge-green">Top 5</span>
+      </div>
+      <div style="overflow:auto;max-height:270px">
+        <table class="pt">
+          <thead><tr><th>#</th><th>Product</th><th style="text-align:right">Revenue</th></tr></thead>
+          <tbody id="pt-body"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Category Breakdown</div>
+          <div class="card-sub">Revenue by product category</div>
+        </div>
+      </div>
+      <canvas id="Category" height="270"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================
+     PRODUCTS SECTION
+======================================================== -->
+<div class="section" id="sec-products">
+  <div style="margin-bottom:24px">
+    <div style="font-size:22px;font-weight:800;letter-spacing:-.5px;margin-bottom:4px">Product Performance</div>
+    <div style="font-size:13px;color:var(--muted)">Revenue, quantity and pricing for all products</div>
+  </div>
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <div class="card-title">All Products — Ranked by Revenue</div>
+        <div class="card-sub">Completed transactions only</div>
+      </div>
+      <span class="badge">Live</span>
+    </div>
+    <table class="pt" style="width:100%">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Product</th>
+          <th>Category</th>
+          <th style="text-align:right">Avg Price</th>
+          <th style="text-align:right">Qty Sold</th>
+          <th style="text-align:right">Revenue</th>
+          <th style="text-align:right">Share</th>
+        </tr>
+      </thead>
+      <tbody id="full-pt"></tbody>
+    </table>
+  </div>
+  <div style="margin-top:18px">
+    <div class="card">
+      <div class="card-head"><div class="card-title">Revenue per Product (Bar)</div></div>
+      <canvas id="ProdBar" height="220"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================
+     REGIONS SECTION
+======================================================== -->
+<div class="section" id="sec-regions">
+  <div style="margin-bottom:24px">
+    <div style="font-size:22px;font-weight:800;letter-spacing:-.5px;margin-bottom:4px">Regional Analysis</div>
+    <div style="font-size:13px;color:var(--muted)">Sales performance across North, South, East and West</div>
+  </div>
+  <div class="row3">
+    <div class="card">
+      <div class="card-head"><div class="card-title">Revenue Share by Region</div></div>
+      <canvas id="RegionPie" height="300"></canvas>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">Region Comparison</div><div class="card-sub">Transactions vs Revenue</div></div>
+      <canvas id="RegionBar" height="300"></canvas>
+    </div>
+  </div>
+  <div class="card" style="margin-top:18px">
+    <div class="card-head"><div class="card-title">Region Details</div></div>
+    <table class="pt" style="width:100%">
+      <thead>
+        <tr>
+          <th>Region</th>
+          <th style="text-align:right">Revenue</th>
+          <th style="text-align:right">Transactions</th>
+          <th style="text-align:right">Share</th>
+        </tr>
+      </thead>
+      <tbody id="region-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ========================================================
+     AI ASSISTANT SECTION
+======================================================== -->
+<div class="section" id="sec-assistant">
+  <div class="ai-layout">
+
+    <!-- Left: info -->
+    <div class="ai-info">
+      <div class="ai-hero">
+        <div class="ai-hero-tag">🤖 Powered by Groq · Llama 3.1</div>
+        <div class="ai-hero-title">Your AI Business<br/>Intelligence Assistant</div>
+        <div class="ai-hero-desc">
+          Ask questions in plain English and get instant, data-backed answers pulled directly from your sales database.
+          The AI never guesses — every number comes from real data.
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">What I Can Help With</div>
+        <div class="capability-grid">
+          <div class="cap">
+            <div class="cap-icon">💰</div>
+            <div class="cap-title">Revenue Analysis</div>
+            <div class="cap-desc">Total revenue, net sales, and financial summaries from your data.</div>
+          </div>
+          <div class="cap">
+            <div class="cap-icon">📦</div>
+            <div class="cap-title">Product Insights</div>
+            <div class="cap-desc">Best-selling products, revenue rankings, and performance comparisons.</div>
+          </div>
+          <div class="cap">
+            <div class="cap-icon">📈</div>
+            <div class="cap-title">Monthly Trends</div>
+            <div class="cap-desc">Month-over-month revenue trends and growth patterns.</div>
+          </div>
+          <div class="cap">
+            <div class="cap-icon">🌍</div>
+            <div class="cap-title">Regional Performance</div>
+            <div class="cap-desc">Which region drives the most revenue and transaction volume.</div>
+          </div>
+          <div class="cap">
+            <div class="cap-icon">📅</div>
+            <div class="cap-title">Period Comparison</div>
+            <div class="cap-desc">Compare revenue between any two months side by side.</div>
+          </div>
+          <div class="cap">
+            <div class="cap-icon">🔄</div>
+            <div class="cap-title">Returns Tracking</div>
+            <div class="cap-desc">Overview of returned orders and their impact on revenue.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="background:rgba(124,111,255,.06);border-color:rgba(124,111,255,.2)">
+        <div style="font-size:12px;color:var(--muted);line-height:1.7">
+          <strong style="color:var(--txt)">🔒 Security Note:</strong>
+          The AI classifies your question, fetches real data from the SQLite database using pre-defined safe queries, then uses Groq's Llama 3.1 to write a grounded answer.
+          The model <em>never</em> executes arbitrary SQL or invents figures.
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: chat widget -->
+    <div class="chat-widget">
+      <div class="chat-top">
+        <div class="chat-avatar">🤖</div>
+        <div>
+          <div class="chat-name">SalesIQ Assistant</div>
+          <div class="chat-online"><span class="status-dot"></span> Groq · Llama 3.1-8b-instant</div>
+        </div>
+      </div>
+
+      <div id="api-warn" class="api-warn">
+        ⚠ <strong>Groq API key not set.</strong> Open <code>salesiq/backend/.env</code> and replace <code>your_groq_api_key_here</code> with your real key from
+        <a href="https://console.groq.com/keys" target="_blank">console.groq.com</a>, then restart the server.
+      </div>
+
+      <div class="chat-msgs" id="chat-msgs">
+        <div class="msg msg-bot">
+          👋 Hello! I'm your AI business analyst powered by Groq.<br/><br/>
+          Ask me about revenue, top products, monthly trends, regional performance, or compare any two months. Try one of the suggestions below!
+        </div>
+      </div>
+
+      <div class="chips" id="chips"></div>
+
+      <div class="chat-foot">
+        <input id="inp" type="text" placeholder="Ask about your sales data…" autocomplete="off"
+          onkeydown="if(event.key==='Enter')send()" />
+        <button id="send" onclick="send()">➤</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ========================================================
+     JAVASCRIPT
+======================================================== -->
+<script>
+/* -------------------------------------------------------
+   CONFIG
+------------------------------------------------------- */
+const API = 'http://localhost:8000/api';
+let charts = {};
+
+/* -------------------------------------------------------
+   NAVIGATION
+------------------------------------------------------- */
+function showSection(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'));
+  document.getElementById('sec-' + name).classList.add('active');
+  const tab = document.getElementById('tab-' + name);
+  if (tab) tab.classList.add('active');
+  if (name === 'products') loadProductsPage();
+  if (name === 'regions')  loadRegionsPage();
+}
+
+/* -------------------------------------------------------
+   FORMAT
+------------------------------------------------------- */
+function fmt(n) {
+  if (n >= 1e7) return '₹' + (n / 1e7).toFixed(2) + ' Cr';
+  if (n >= 1e5) return '₹' + (n / 1e5).toFixed(2) + ' L';
+  return '₹' + n.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+}
+function fmtFull(n) {
+  return '₹' + n.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+}
+function clr(i) {
+  return ['#7c6fff','#00cba9','#ffc048','#ff6b6b','#a78bfa','#06d6a0','#f9c74f'][i % 7];
+}
+
+/* -------------------------------------------------------
+   SKELETON HELPERS
+------------------------------------------------------- */
+function unske(...ids) {
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('ske','ske-h','ske-s');
+  });
+}
+
+/* -------------------------------------------------------
+   HEALTH CHECK
+------------------------------------------------------- */
+async function checkHealth() {
+  try {
+    const r = await fetch(`${API}/health`);
+    const d = await r.json();
+    const pill = document.getElementById('status-pill');
+    const txt  = document.getElementById('status-txt');
+    if (d.status === 'ok') {
+      txt.textContent = 'Connected';
+      pill.style.background = 'rgba(0,203,169,.1)';
+      pill.style.borderColor = 'rgba(0,203,169,.25)';
+      pill.style.color = 'var(--p2)';
+      if (!d.groq_configured) {
+        document.getElementById('api-warn').classList.add('show');
+      }
+    }
+  } catch {
+    const txt = document.getElementById('status-txt');
+    txt.textContent = 'Offline';
+    document.getElementById('status-pill').style.background = 'rgba(255,107,107,.1)';
+    document.getElementById('status-pill').style.borderColor = 'rgba(255,107,107,.25)';
+    document.getElementById('status-pill').style.color = 'var(--warn)';
+  }
+}
+
+/* -------------------------------------------------------
+   OVERVIEW
+------------------------------------------------------- */
+async function loadOverview() {
+  const r = await fetch(`${API}/analytics/overview`);
+  const d = await r.json();
+  unske('kv-rev','ks-rev','kv-txn','ks-txn','kv-prd','ks-prd','kv-ret','ks-ret');
+
+  document.getElementById('kv-rev').textContent = fmt(d.total_revenue);
+  document.getElementById('ks-rev').textContent = `${d.transaction_count} completed`;
+  document.getElementById('kv-txn').textContent = d.total_transactions.toLocaleString();
+  document.getElementById('ks-txn').textContent = `${d.returns_count} returned`;
+  document.getElementById('kv-prd').textContent = d.product_count;
+  document.getElementById('ks-prd').textContent = `across ${d.region_count} regions`;
+  document.getElementById('kv-ret').textContent = fmt(d.returns_value);
+  document.getElementById('ks-ret').textContent = `${d.returns_count} return(s)`;
+
+  document.getElementById('h-rev').textContent = fmt(d.total_revenue);
+  document.getElementById('h-txn').textContent = d.total_transactions;
+  document.getElementById('h-prod').textContent = d.product_count;
+}
+
+/* -------------------------------------------------------
+   MONTHLY CHART
+------------------------------------------------------- */
+Chart.defaults.color = '#6b7494';
+Chart.defaults.font.family = 'Inter';
+Chart.defaults.borderColor = 'rgba(255,255,255,0.05)';
+
+async function loadMonthly() {
+  const r = await fetch(`${API}/analytics/monthly-revenue`);
+  const { data } = await r.json();
+  const labels = data.map(d => {
+    const [y,m] = d.month.split('-');
+    return new Date(y, m-1).toLocaleString('en',{month:'short',year:'2-digit'});
+  });
+  if (charts.monthly) charts.monthly.destroy();
+  charts.monthly = new Chart(document.getElementById('Monthly'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Revenue',
+        data: data.map(d => d.revenue),
+        borderColor: '#7c6fff',
+        backgroundColor: 'rgba(124,111,255,0.1)',
+        borderWidth: 2.5,
+        pointBackgroundColor: '#7c6fff',
+        pointRadius: 5,
+        pointHoverRadius: 8,
+        fill: true,
+        tension: 0.4
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: c => ' ' + fmtFull(c.parsed.y) } }
+      },
+      scales: {
+        y: {
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          ticks: { callback: v => fmt(v) }
+        },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+}
+
+/* -------------------------------------------------------
+   REGION DONUT
+------------------------------------------------------- */
+async function loadRegionDonut() {
+  const r = await fetch(`${API}/analytics/region-revenue`);
+  const { data } = await r.json();
+  if (charts.region) charts.region.destroy();
+  charts.region = new Chart(document.getElementById('Region'), {
+    type: 'doughnut',
+    data: {
+      labels: data.map(d => d.region),
+      datasets: [{
+        data: data.map(d => d.revenue),
+        backgroundColor: data.map((_,i) => clr(i)),
+        borderColor: '#0e1320',
+        borderWidth: 3, hoverOffset: 8
+      }]
+    },
+    options: {
+      responsive: true,
+      cutout: '65%',
+      plugins: {
+        legend: { position:'bottom', labels:{ padding:16, usePointStyle:true, pointStyleWidth:8 } },
+        tooltip: { callbacks: { label: c => ' ' + fmtFull(c.parsed) } }
+      }
+    }
+  });
+}
+
+/* -------------------------------------------------------
+   PRODUCTS TABLE + CATEGORY CHART (dashboard)
+------------------------------------------------------- */
+let prodData = null;
+async function loadProducts() {
+  const r = await fetch(`${API}/analytics/top-products`);
+  const { data } = await r.json();
+  prodData = data;
+  const max = data[0]?.revenue || 1;
+  const tbody = document.getElementById('pt-body');
+  tbody.innerHTML = '';
+  data.slice(0,5).forEach((p,i) => {
+    const pct = ((p.revenue / max) * 100).toFixed(0);
+    tbody.innerHTML += `
+      <tr>
+        <td><div class="rank">${i+1}</div></td>
+        <td>
+          <div class="p-name">${p.product}</div>
+          <div class="p-cat">${p.category}</div>
+          <div class="bar-wrap"><div class="bar-fill" style="width:${pct}%"></div></div>
+        </td>
+        <td style="text-align:right;font-weight:700;font-size:13px">${fmt(p.revenue)}</td>
+      </tr>`;
+  });
+
+  // Category chart
+  const catMap = {};
+  data.forEach(p => { catMap[p.category] = (catMap[p.category]||0) + p.revenue; });
+  const cats = Object.keys(catMap);
+  if (charts.cat) charts.cat.destroy();
+  charts.cat = new Chart(document.getElementById('Category'), {
+    type: 'bar',
+    data: {
+      labels: cats,
+      datasets: [{
+        data: Object.values(catMap),
+        backgroundColor: cats.map((_,i) => clr(i)),
+        borderRadius: 8, borderSkipped: false
+      }]
+    },
+    options: {
+      responsive: true, indexAxis: 'y',
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: c => ' ' + fmtFull(c.parsed.x) } }
+      },
+      scales: {
+        x: { grid:{ color:'rgba(255,255,255,0.04)' }, ticks:{ callback: v=>fmt(v) } },
+        y: { grid:{ display:false } }
+      }
+    }
+  });
+}
+
+/* -------------------------------------------------------
+   PRODUCTS PAGE
+------------------------------------------------------- */
+async function loadProductsPage() {
+  if (!prodData) {
+    const r = await fetch(`${API}/analytics/top-products`);
+    const { data } = await r.json();
+    prodData = data;
+  }
+  const totalRev = prodData.reduce((s,p) => s + p.revenue, 0);
+  const tbody = document.getElementById('full-pt');
+  tbody.innerHTML = '';
+  prodData.forEach((p,i) => {
+    const share = ((p.revenue/totalRev)*100).toFixed(1);
+    tbody.innerHTML += `
+      <tr>
+        <td><div class="rank">${i+1}</div></td>
+        <td>
+          <div class="p-name">${p.product}</div>
+          <div class="bar-wrap" style="width:120px;margin-top:6px">
+            <div class="bar-fill" style="width:${(p.revenue/prodData[0].revenue*100).toFixed(0)}%"></div>
+          </div>
+        </td>
+        <td style="color:var(--muted)">${p.category}</td>
+        <td style="text-align:right">₹${p.avg_unit_price.toLocaleString('en-IN')}</td>
+        <td style="text-align:right">${p.total_quantity}</td>
+        <td style="text-align:right;font-weight:700">${fmt(p.revenue)}</td>
+        <td style="text-align:right;color:var(--p)">${share}%</td>
+      </tr>`;
+  });
+
+  if (charts.prodbar) charts.prodbar.destroy();
+  charts.prodbar = new Chart(document.getElementById('ProdBar'), {
+    type: 'bar',
+    data: {
+      labels: prodData.map(p => p.product),
+      datasets: [{
+        label: 'Revenue',
+        data: prodData.map(p => p.revenue),
+        backgroundColor: prodData.map((_,i) => clr(i)),
+        borderRadius: 8, borderSkipped: false
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: c => ' ' + fmtFull(c.parsed.y) } }
+      },
+      scales: {
+        y: { grid:{ color:'rgba(255,255,255,0.04)' }, ticks:{ callback: v=>fmt(v) } },
+        x: { grid:{ display:false } }
+      }
+    }
+  });
+}
+
+/* -------------------------------------------------------
+   REGIONS PAGE
+------------------------------------------------------- */
+let regionData = null;
+async function loadRegionsPage() {
+  if (!regionData) {
+    const r = await fetch(`${API}/analytics/region-revenue`);
+    const { data } = await r.json();
+    regionData = data;
+  }
+  const total = regionData.reduce((s,r) => s+r.revenue, 0);
+
+  const tbody = document.getElementById('region-tbody');
+  tbody.innerHTML = '';
+  regionData.forEach((r,i) => {
+    const share = ((r.revenue/total)*100).toFixed(1);
+    tbody.innerHTML += `
+      <tr>
+        <td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${clr(i)};margin-right:8px"></span>${r.region}</td>
+        <td style="text-align:right;font-weight:700">${fmt(r.revenue)}</td>
+        <td style="text-align:right;color:var(--muted)">${r.transaction_count}</td>
+        <td style="text-align:right;color:var(--p)">${share}%</td>
+      </tr>`;
+  });
+
+  if (charts.rpie) charts.rpie.destroy();
+  charts.rpie = new Chart(document.getElementById('RegionPie'), {
+    type: 'pie',
+    data: {
+      labels: regionData.map(r => r.region),
+      datasets: [{
+        data: regionData.map(r => r.revenue),
+        backgroundColor: regionData.map((_,i) => clr(i)),
+        borderColor: '#0e1320', borderWidth: 3, hoverOffset: 10
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position:'bottom', labels:{ padding:16, usePointStyle:true } },
+        tooltip: { callbacks: { label: c => ` ${c.label}: ${fmtFull(c.parsed)}` } }
+      }
+    }
+  });
+
+  if (charts.rbar) charts.rbar.destroy();
+  charts.rbar = new Chart(document.getElementById('RegionBar'), {
+    type: 'bar',
+    data: {
+      labels: regionData.map(r => r.region),
+      datasets: [
+        {
+          label: 'Revenue (₹)',
+          data: regionData.map(r => r.revenue),
+          backgroundColor: regionData.map((_,i) => clr(i)),
+          borderRadius: 8, borderSkipped: false, yAxisID: 'y'
+        },
+        {
+          label: 'Transactions',
+          data: regionData.map(r => r.transaction_count),
+          type: 'line',
+          borderColor: '#ffc048', backgroundColor: 'rgba(255,192,72,.15)',
+          borderWidth: 2, pointRadius: 5, fill: true, tension: 0.4,
+          yAxisID: 'y2'
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { position:'top', labels:{ padding:16, usePointStyle:true } } },
+      scales: {
+        y:  { type:'linear', position:'left',  grid:{ color:'rgba(255,255,255,0.04)' }, ticks:{ callback: v=>fmt(v) } },
+        y2: { type:'linear', position:'right', grid:{ drawOnChartArea:false } }
+      }
+    }
+  });
+}
+
+/* -------------------------------------------------------
+   SUGGESTIONS
+------------------------------------------------------- */
+async function loadSuggestions() {
+  try {
+    const r = await fetch(`${API}/suggestions`);
+    const { suggestions } = await r.json();
+    const box = document.getElementById('chips');
+    box.innerHTML = '';
+    suggestions.forEach(s => {
+      const btn = document.createElement('button');
+      btn.className = 'chip';
+      btn.textContent = s;
+      btn.onclick = () => {
+        document.getElementById('inp').value = s;
+        send();
+      };
+      box.appendChild(btn);
+    });
+  } catch {}
+}
+
+/* -------------------------------------------------------
+   CHAT
+------------------------------------------------------- */
+function appendMsg(text, cls) {
+  const box = document.getElementById('chat-msgs');
+  const el  = document.createElement('div');
+  el.className = `msg ${cls}`;
+  el.textContent = text;
+  box.appendChild(el);
+  box.scrollTop = box.scrollHeight;
+}
+
+function showTyping() {
+  const box = document.getElementById('chat-msgs');
+  const el  = document.createElement('div');
+  el.className = 'msg msg-bot typing';
+  el.id = 'tdot';
+  el.innerHTML = '<div class="tdot"></div><div class="tdot"></div><div class="tdot"></div>';
+  box.appendChild(el);
+  box.scrollTop = box.scrollHeight;
+}
+function hideTyping() { const t = document.getElementById('tdot'); if (t) t.remove(); }
+
+async function send() {
+  const inp = document.getElementById('inp');
+  const q   = inp.value.trim();
+  if (!q) return;
+  inp.value = '';
+
+  document.getElementById('chips').style.display = 'none';
+  document.getElementById('send').disabled = true;
+  appendMsg(q, 'msg-user');
+  showTyping();
+
+  try {
+    const res = await fetch(`${API}/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: q })
+    });
+    const data = await res.json();
+    hideTyping();
+    if (data.error && !data.answer) {
+      appendMsg('⚠ ' + data.error, 'msg-err');
+    } else {
+      appendMsg(data.answer, 'msg-bot');
+      if (data.error) {
+        appendMsg('Note: ' + data.error, 'msg-err');
+      }
+    }
+  } catch {
+    hideTyping();
+    appendMsg('⚠ Could not reach the backend. Make sure the server is running at localhost:8000.', 'msg-err');
+  } finally {
+    document.getElementById('send').disabled = false;
+    inp.focus();
+  }
+}
+
+/* -------------------------------------------------------
+   BOOT
+------------------------------------------------------- */
+async function boot() {
+  await checkHealth();
+  await loadOverview();
+  await Promise.all([loadMonthly(), loadRegionDonut(), loadProducts()]);
+  await loadSuggestions();
+}
+
+document.addEventListener('DOMContentLoaded', boot);
+</script>
+</body>
+</html>
